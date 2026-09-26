@@ -6,6 +6,7 @@ import { PERM } from '../../model/builtin';
 import domain from '../../model/domain';
 import system from '../../model/system';
 import token from '../../model/token';
+import { inc as opcountInc } from '../../model/opcount';
 
 export interface UiContextBase {
     cdn_prefix: string;
@@ -45,6 +46,12 @@ export default async (ctx: KoaContext, next: Next) => {
         : ctx.cookies.get('sid') || ctx.query.sid; // FIXME maybe a better way for shared conn?
     const session = sid ? await token.get(sid instanceof Array ? sid[0] : sid, token.TYPE_SESSION) : null;
     ctx.session = Object.create(session || { uid: 0, scope: PERM.PERM_ALL.toString() });
+    // 在线人数：每个动态请求写入 5 分钟窗口的存在记录（opcount TTL 自动清理）。
+    await opcountInc(
+        'user_online',
+        ctx.session._id || `${ctx.request.ip}::${String(ctx.request.headers['user-agent'] || '').slice(0, 40)}`,
+        300, 100000,
+    ).catch(() => null);
     await next();
     const request = ctx.HydroContext.request;
     const ua = request.headers['user-agent'] || '';

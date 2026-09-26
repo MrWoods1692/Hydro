@@ -11,18 +11,20 @@
   transition: background .2s
   transition-timing-function: ease-out-cubic
   z-index: 500
-  background: rgba(#FFF, 0.98)
+  background: rgba(#FFFDF8, 0.97)
+  border-bottom: 1px solid #EDE2C6
+  backdrop-filter: blur(10px)
 
   .nav__item
     color: $text-1-color
     &.nav--active
       border-color: $nav-item-active-color
+      color: $primary-color
       &:before
-        box-shadow: 0 0 30px $nav-item-active-color,
-                    0 0 30px $nav-item-active-color
+        box-shadow: none
     &:hover
-      border-color: $nav-item-hover-color
-      background: #F8F8F8
+      border-color: lighten($nav-item-hover-color, 45%)
+      background: #F6EFDC
       &:before
         box-shadow: none
 
@@ -57,7 +59,7 @@
   z-index: 300
   transition: box-shadow .2s
   transition-timing-function: ease-out-cubic
-  box-shadow: 0 0 6px rgba(#000, 0.3)
+  box-shadow: 0 6px 20px rgba(#B89B5E, 0.14)
 
   .nojs &
     display: none
@@ -72,7 +74,7 @@
   display: block
   line-height: rem($nav-item-height - 6)
   padding: rem(0 20px 3px 20px)
-  border-top: 3px solid transparent
+  border-bottom: 3px solid transparent
   color: #000
   transition: border-color .2s, background .2s, color .2s
   transition-timing-function: ease-out-cubic
@@ -91,15 +93,13 @@
 
   &.nav--active
     border-color: $nav-item-active-immersive-color
-    &:before
-      box-shadow: 0 0 30px #FFF,
-                  0 0 30px #FFF,
-                  0 0 30px #FFF
+    color: $primary-color
+    font-weight: 600
 
   &:hover
     text-decoration: none
     border-color: lighten($nav-item-hover-color, 60%)
-    background: rgba(#FFF, 0.3)
+    background: rgba(#F6EFDC, 0.6)
 
 
 .nav__list--secondary
@@ -150,6 +150,7 @@
   margin-right: 6px
   border-radius: 50%
   object-fit: cover
+  box-shadow: 0 0 0 2px #F2E3A8
 
 // For Mobile: show a slideout vertical arranged menu
 +mobile()

@@ -22,6 +22,7 @@
   {% include "partials/footer.html" %}
 </div>
 {% if UserContext and not handler.user._id %}{% include "partials/login_dialog.html" %}{% endif %}
+<script src="/misc/rest-reminder.js" defer></script>
 {% endblock %}
 {% block ogp %}
 {% endblock %}

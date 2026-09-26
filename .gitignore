@@ -38,6 +38,9 @@ tsconfig.*.json
 ## Core
 packages/**/*.js
 !/build/*.js
+
+# Local fork data (memory mongo logs, file storage, brand scripts) — never commit
+data/
 !**/bin/*.js
 !*.page.js
 !packages/register/index.js

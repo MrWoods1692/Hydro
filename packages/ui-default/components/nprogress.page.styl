@@ -1,4 +1,4 @@
-$spinner-size = 18px
+$spinner-size = 22px
 $spinner-margin = ($nav-item-height - $spinner-size) / 2
 
 #nprogress
@@ -11,12 +11,22 @@ $spinner-margin = ($nav-item-height - $spinner-size) / 2
   z-index: 99
   left: 0
   width: 100%
-  height: 2px
+  height: 3px
+  border-radius: 0 3px 3px 0
+  box-shadow: 0 0 10px rgba(#C9A227, 0.55), 0 0 24px rgba(#C9A227, 0.3)
   +mobile()
     margin-top: rem(10px)
 
 #nprogress .peg
-  display: none
+  display: block
+  height: 100%
+  width: rem(56px)
+  position: absolute
+  right: 0
+  top: 0
+  border-radius: 0 3px 3px 0
+  background: rgba(#F8E8B0, 0.95)
+  box-shadow: 0 0 12px rgba(#C9A227, 0.9), 0 0 28px rgba(#C9A227, 0.5)
 
 #nprogress .spinner
   display: block
@@ -29,11 +39,12 @@ $spinner-margin = ($nav-item-height - $spinner-size) / 2
   width: rem($spinner-size)
   height: rem($spinner-size)
   box-sizing: border-box
-  border: solid 2px transparent
-  border-top-color: $nprogress-color
-  border-left-color: $nprogress-color
+  border: 3px solid rgba(#C9A227, 0.22)
+  border-top-color: #C9A227
+  border-left-color: #C9A227
   border-radius: 50%
-  animation: nprogress-spinner 400ms linear infinite
+  filter: drop-shadow(0 0 6px rgba(#C9A227, 0.55))
+  animation: nprogress-spinner 700ms linear infinite
 
 .nprogress-custom-parent
   overflow: hidden

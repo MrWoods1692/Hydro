@@ -22,16 +22,6 @@
       {% if handler.user.hasPriv(PRIV.PRIV_REGISTER_USER) and model.system.get('server.login') %}
       <li class="nav__list-item"><a href="{{ url('user_register') }}" class="nav__item--round">{{ _('Sign Up') }}</a></li>
       {% endif %}
-      <li class="nav__list-item nojs--hide" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
-        <a href="javascript:;" class="nav__item">
-          <span class="icon icon-global"></span>Language <span class="icon icon-expand_more"></span>
-        </a>
-        <ol class="dropdown-target menu" id="menu-nav-user">
-          {%- for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range -%}
-            <li class="menu__item"><a class="menu__link" href="{{ url('switch_language', lang=k) }}">{{ v }}</a></li>
-          {%- endfor -%}
-        </ol>
-      </li>
     {% else %}
     {% if model.system.get('ui-default.domainNavigation') %}
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-domain" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>

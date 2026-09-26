@@ -1,8 +1,17 @@
 <div class="footer">
   <div class="row"><div class="columns">
-  {% if show_topics|default(true) %}
-    <div class="row footer__links">
-      <div class="medium-3 large-2 columns footer__category expandable">
+  <div class="footer__card clearfix">
+{% if show_topics|default(true) %}
+    <div class="footer__brand clearfix">
+      <img class="footer__brand-badge" src="/img/guiguang-school-badge.png?v=school" alt="奎光">
+      <div class="footer__brand-text">
+        <h1>奎光 OJ</h1>
+        <p>桂林市奎光学校 · 编程学习在线测评平台<br>以赛促学，以代码连接校园。</p>
+        <p class="footer__brand-online"><span class="online-dot"></span> 当前在线 <b>{{ model.system.get('ui.onlineCount')|default(0) }}</b> 人</p>
+      </div>
+    </div>
+    <div class="footer__cols clearfix">
+      <div class="footer__category expandable">
         <h1>
           {{ _('Status') }}
           <span class="expand-icon">
@@ -14,7 +23,7 @@
           <li class="footer__category__item"><a href="{{ url('status') }}">{{ _('Service Status') }}</a></li>
         </ul></div>
       </div>
-      <div class="medium-3 large-2 columns footer__category expandable">
+      <div class="footer__category expandable">
         <h1>
           {{ _('Development') }}
           <span class="expand-icon">
@@ -25,7 +34,7 @@
           <li class="footer__category__item"><a href="https://github.com/hydro-dev/Hydro" target="_blank">{{ _('Open Source') }}</a></li>
         </ul></div>
       </div>
-      <div class="medium-3 large-2 columns footer__category expandable">
+      <div class="footer__category expandable">
         <h1>
           {{ _('Support') }}
           <span class="expand-icon">
@@ -37,7 +46,7 @@
           <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Contact Us') }}</a></li>
         </ul></div>
       </div>
-      <div class="medium-3 large-2 columns footer__category expandable end">
+      <div class="footer__category expandable">
         <h1>
           {{ _('About') }}
           <span class="expand-icon">
@@ -63,14 +72,6 @@
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Copyright Complaint') }}</a></li>
           {% endif %}
-          <li class="footer__extra-link-item nojs--hide" data-dropdown-target="#menu-footer-lang">
-            <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
-            <ol class="dropdown-target menu" id="menu-footer-lang">
-            {%- for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range -%}
-              <li class="menu__item"><a class="menu__link" href="{{ url('switch_language', lang=k) }}">{{ v }}</a></li>
-            {%- endfor -%}
-            </ol>
-          </li>
           <li class="footer__extra-link-item">
             {% if handler.session.legacy %}
               <a href="/legacy">{{ _('Standard mode') }}</a>
@@ -103,6 +104,7 @@
           <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a> {{ "Professional" if model.system.get('server.pro') else "Community" }}</li>
         </ol>
       </div>
+    </div>
     </div>
   </div></div>
 </div>

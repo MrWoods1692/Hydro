@@ -1,25 +1,120 @@
 $footer-extra-link-gap = 20px
 
 .footer
-  background: $footer-bg-color
+  background: transparent
   color: $text-1-color
+  padding: rem(0 0 30px)
+
+// Floating rounded card: the whole footer is one white card on the warm page.
+.footer__card
+  background: #FFF
+  border: 1px solid #EDE2C6
+  border-top: 2px solid $secondary-color
+  border-radius: rem(16px)
+  box-shadow: 0 10px 30px rgba(#B89B5E, 0.16)
+  padding: rem(28px 28px 6px)
+
+  +mobile()
+    border-radius: rem(12px)
+    margin: 0 rem($grid-padding)
+    padding: rem($grid-padding)
+    box-shadow: 0 6px 18px rgba(#B89B5E, 0.12)
+
+.footer__brand
+  display: flex
+  align-items: center
+  gap: rem(14px)
+  padding-bottom: rem(18px)
+  margin-bottom: rem(18px)
+  border-bottom: 1px solid #EFE6CE
+
+  +mobile()
+    align-items: flex-start
+    margin-bottom: rem(12px)
+    padding-bottom: rem(12px)
+
+.footer__brand-badge
+  width: rem(52px)
+  height: rem(52px)
+  border-radius: 50%
+  background: #FFF
+  box-shadow: 0 0 0 3px #F4E7C3
+  object-fit: contain
+  flex: none
+
+.footer__brand-text
+  h1
+    margin: 0
+    font-size: rem(20px)
+    color: #6B4F0F
+    letter-spacing: 0.12em
+    font-weight: 700
+
+  p
+    margin: rem(4px 0 0)
+    font-size: rem($font-size-small)
+    color: $text-2-color
+    line-height: 1.6
+
+.footer__brand-online
+  display: inline-flex
+  align-items: center
+  gap: rem(7px)
+  margin-top: rem(10px)
+  padding: rem(3px 12px)
+  border-radius: 999px
+  background: #F7EFDA
+  color: #8A6A12
+  font-size: rem(12px)
+  font-weight: 500
+
+  b
+    color: $primary-color
+    font-size: rem(14px)
+    font-weight: 700
+
+.online-dot
+  width: 8px
+  height: 8px
+  border-radius: 50%
+  background: #35B37E
+  box-shadow: 0 0 0 0 rgba(#35B37E, 0.5)
+  animation: online-pulse 1.6s ease-out infinite
+
+@keyframes online-pulse
+  0%
+    box-shadow: 0 0 0 0 rgba(#35B37E, 0.5)
+  70%
+    box-shadow: 0 0 0 6px rgba(#35B37E, 0)
+  100%
+    box-shadow: 0 0 0 0 rgba(#35B37E, 0)
+
+.footer__cols
+  display: flex
+  gap: rem(26px)
+
+  +mobile()
+    display: block
+    gap: 0
+
+.footer__category
+  flex: 1
+  min-width: 0
+  padding: 0
 
   h1
-    font-size: rem($font-size-title)
+    font-size: rem(14px)
+    color: #8A6A12
+    letter-spacing: 0.06em
 
     +mobile()
       padding: rem($grid-padding)
       cursor: pointer
       font-size: rem($font-size-secondary)
 
-.footer__category
-  padding-top: rem(30px)
-  padding-bottom: rem(50px)
-
   +mobile()
-    padding-top: rem($grid-padding)
-    padding-bottom: rem($grid-padding)
-    border-bottom: 1px solid darken($footer-bg-color, 5%)
+    padding: 0
+    border-bottom: 1px solid darken(#FFF, 5%)
 
     &.expandable
       padding: 0
@@ -38,6 +133,14 @@ $footer-extra-link-gap = 20px
   margin-bottom: rem(10px)
   font-size: rem($font-size-small)
   line-height: 2
+
+  a
+    transition: color .2s
+
+    &:hover
+      color: $primary-color
+      text-decoration: underline
+      text-underline-offset: 3px
 
   +mobile()
     margin-top: 0
@@ -58,8 +161,10 @@ $footer-extra-link-gap = 20px
   float: right
 
 .footer__extra-link
-  padding: rem(20px 0)
+  padding: rem(18px 0 20px)
+  margin-top: rem(16px)
   font-size: rem($font-size-small)
+  border-top: 1px solid #EFE6CE
 
 .footer__extra-link-item
   float: left
@@ -74,13 +179,6 @@ $footer-extra-link-gap = 20px
 .layout--immersive
   .footer
     background: none
-    color: #FFF
-
-    a, a:visited, a:active
-      color: #FFF
-
-    a:hover
-      color: #FFF
 
 +mobile()
   .footer__extra-left, .footer__extra-right
