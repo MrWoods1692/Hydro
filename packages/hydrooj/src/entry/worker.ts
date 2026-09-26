@@ -88,7 +88,10 @@ export async function apply(ctx: Context) {
         try {
             const online: number = await new Promise((resolve) => {
                 ctx.inject(['db'], ({ db }) => resolve(
-                    db.collection('opcount').countDocuments({ op: 'user_online' }),
+                    db.collection('opcount').distinct('ident', { op: 'user_online' })
+                        .then((idents: string[]) => [
+                            ...new Set(idents.map(Number).filter((n) => Number.isSafeInteger(n) && n > 1)),
+                        ].length),
                 ));
             });
             await SystemModel.set('ui.onlineCount', online);

@@ -247,16 +247,12 @@ const ServerLangSettingNode = {
 };
 
 PreferenceSetting(
-    Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
-    Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
     LangSettingNode,
     Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
 
 AccountSetting(
-    Setting('setting_info', 'avatar', '', 'text', 'Avatar',
-        'Allow using gravatar:email qq:id github:name url:link format.'),
     Setting('setting_info', 'qq', null, 'text', 'QQ'),
     Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),

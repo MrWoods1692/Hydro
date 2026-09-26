@@ -73,13 +73,14 @@ class CheckinHandler extends Handler {
         const domainId = domainOf(this);
         const day = dayKey();
         const checked = await svc().isCheckedIn(domainId, this.user._id, day);
-        const history = await svc().listUser(domainId, this.user._id, 14);
+        const history = await svc().listUser(domainId, this.user._id, 45);
         const todayList = await svc().listDay(domainId, day);
         this.response.template = 'checkin.html';
         this.response.body = {
             day,
             checked,
             history,
+            records: history.map((r: any) => r.day),
             todayCount: todayList.length,
         };
     }

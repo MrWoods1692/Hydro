@@ -89,6 +89,7 @@ export interface Udoc extends Record<string, any> {
     priv: number;
     regat: Date;
     loginat: Date;
+    firstLogin?: Date;
     ip: string[];
     loginip: string;
 }

@@ -138,10 +138,7 @@ export async function buildUI() {
   ].join('\n'));
   const pages = entry.outputFiles.filter((i) => i.path.endsWith('.js')).map((i) => i.text);
   const css = entry.outputFiles.filter((i) => i.path.endsWith('.css')).map((i) => i.text);
-  addFile('entry.js', `window._hydroLoad=()=>{
-    ${css.length ? applyCss(css.join('\n')) : ''}
-    ${pages.join('\n')}
-  };`);
+  addFile('entry.js', `window._hydroLoad=()=>{\n    ${css.length ? applyCss(css.join('\n')) : ''}\n    ${pages.join('\n')}\n  };`);
   UiContextBase.constantVersion = hashes['entry.js'];
   for (const key in vfs) {
     if (newFiles.includes(key)) continue;

@@ -17,19 +17,6 @@ import {
 import { encodeRFC5987ValueChars } from '../service/storage';
 import { sortFiles } from '../utils';
 
-class SwitchLanguageHandler extends Handler {
-    noCheckPermView = true;
-
-    @param('lang', Types.Name)
-    async get(domainId: string, lang: string) {
-        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            this.session.viewLang = lang;
-            await user.setById(this.user._id, { viewLang: lang });
-        } else this.session.viewLang = lang;
-        this.back();
-    }
-}
-
 export class FilesHandler extends Handler {
     noCheckPermView = true;
     udoc: User;
@@ -156,7 +143,6 @@ class HeapSnapshotHandler extends Handler {
 }
 
 export async function apply(ctx: Context) {
-    ctx.Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     ctx.Route('home_files', '/file', FilesHandler);
     ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
     ctx.Route('storage', '/storage', StorageHandler);

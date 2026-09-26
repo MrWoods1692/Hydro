@@ -63,6 +63,8 @@ async function animate() {
 }
 
 export async function initPageLoader() {
+  // 保险丝：即使页面初始化意外挂起，也不让全屏 loader 永久遮挡点击。
+  setTimeout(() => $('.page-loader').hide(), 15000);
   const pageLoader = new PageLoader();
   rounded();
 

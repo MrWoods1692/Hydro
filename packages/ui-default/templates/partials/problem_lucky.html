@@ -1,10 +1,10 @@
 <div data-fragment-id="problem_lucky">
   <p>
-    <a href="{{ url('problem_random', query={q:qs}) if qs else url('problem_random') }}" class="expanded button" target="_blank">
-      <span class="icon icon-feeling-lucky"></span> {{ _('Lucky') }}
+    <a href="{{ url('problem_random', query={q:qs}) if qs else url('problem_random') }}" class="lucky-btn" target="_blank">
+      🍀 缘分推荐 · 随机一题
     </a>
   </p>
-  <div class="typo supplementary">
-    <p>{{ _('Pick a problem randomly based on the current filter.') }}</p>
+  <div class="typo supplementary text-center">
+    <p>今天想刷什么，交给运气吧～</p>
   </div>
 </div>

@@ -1,48 +1,121 @@
-{% extends "layout/html5.html" %}
+{% extends "layout/basic.html" %}
 {% block content %}
+<style>
+  .checkin-cal .section__title { color: #6B4F0F; letter-spacing: 0.06em; }
+  .checkin-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 2px 16px; }
+  .checkin-btn { border: 0; border-radius: 999px; padding: 11px 26px; font-size: 15px; font-weight: 700; cursor: pointer; color: #fff; background: linear-gradient(120deg, #2E8B7A 0%, #1F6B5C 100%); box-shadow: 0 6px 16px rgba(46, 139, 122, 0.3); transition: transform .15s, box-shadow .15s; }
+  .checkin-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(46, 139, 122, 0.38); }
+  .checkin-done { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 10px 22px; font-size: 15px; font-weight: 700; background: #EAF6EC; color: #2E9E5B; border: 1px solid #CBE8D2; }
+  .checkin-top__stat { color: #8A7A55; font-size: 13px; }
+  .checkin-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+  .checkin-weekday { text-align: center; font-size: 12px; color: #A99B78; padding: 4px 0; font-weight: 600; }
+  .checkin-cell { aspect-ratio: 1; border-radius: 10px; border: 1px solid #EFE6CE; background: #FFFDF8; color: #4C453A; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; }
+  .checkin-cell--checked { background: linear-gradient(135deg, #F7EFD2, #F0DFAE); border-color: #D9C277; color: #7A5C10; font-weight: 700; }
+  .checkin-cell--missed { background: #FBEFEF; border-color: #EACCCC; color: #B98A8A; }
+  .checkin-cell--future { background: #F6FAF8; border-color: #E9F1EE; color: #B9C8C2; }
+  .checkin-cell--today { box-shadow: 0 0 0 2px #2E8B7A; font-weight: 800; color: #1F6B5C; }
+  .checkin-cell .ck-mark { position: absolute; top: -1px; right: 3px; font-size: 11px; }
+  .checkin-empty { text-align: center; color: #9A8C6A; padding: 26px 0; font-size: 14px; }
+</style>
 <div class="row">
-  <div class="columns">
-    <div class="section">
+  <div class="medium-9 columns">
+    <div class="section checkin-cal">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Checkin') }} · {{ day }}</h1>
+        <h1 class="section__title">📅 签到日历 · <span id="checkin-month-label"></span></h1>
       </div>
       <div class="section__body">
-        {% if checked %}
-          <p class="typo"><strong>{{ _('Checked in') }}</strong></p>
-        {% else %}
-          <p class="typo">{{ _('Not checked in') }}</p>
-          <form method="post">
-            <button type="submit" class="rounded primary button">{{ _('Check in') }}</button>
-          </form>
-        {% endif %}
-        <p class="typo">{{ _('Check-in records') }} · {{ day }}：{{ todayCount }}</p>
+        <div class="checkin-top">
+          {% if checked %}
+            <span class="checkin-done">✅ 今日已签到</span>
+          {% else %}
+            <button type="button" class="checkin-btn" id="checkin-btn">✋ 点击签到</button>
+          {% endif %}
+          <span class="checkin-top__stat" id="checkin-count">今天已有 <b>{{ todayCount }}</b> 位同学打卡</span>
+          <span class="checkin-top__stat">本月已签到 <b id="checkin-month-count">0</b> 天</span>
+        </div>
+        <div class="checkin-calendar" id="checkin-cal"></div>
+        <div class="typo supplementary" style="margin-top:14px;font-size:12px;">
+          ✅ 金色 = 已签到 ｜ 浅红 = 这天没签 ｜ 描边 = 今天
+        </div>
       </div>
     </div>
-    <div class="section">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Check-in records') }}</h1>
-      </div>
-      <div class="section__body">
-        <table class="data_table">
-          <thead>
-            <tr>
-              <th>{{ _('Date') }}</th>
-              <th>{{ _('Time') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for h in history %}
-            <tr>
-              <td>{{ h.day }}</td>
-              <td>{{ h.createdAt }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="2">—</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div class="section__header"><h1 class="section__title">规则</h1></div>
+      <div class="section__body typo supplementary">
+        <p>每天可签到一次，以当天 0 点为界。</p>
+        <p>记得每天上来打个卡，养成坚持学习的好习惯～</p>
       </div>
     </div>
   </div>
 </div>
+<script>
+(function () {
+  var records = {{ records|json|safe }} || [];
+  var day = '{{ day }}';
+  var recordSet = {};
+  records.forEach(function (d) { recordSet[d] = true; });
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = today.getMonth();
+  var label = document.getElementById('checkin-month-label');
+  label.textContent = y + ' 年 ' + (m + 1) + ' 月';
+  var first = new Date(y, m, 1);
+  var days = new Date(y, m + 1, 0).getDate();
+  var lead = (first.getDay() + 6) % 7; // 周一开头
+  var cal = document.getElementById('checkin-cal');
+  var week = ['一', '二', '三', '四', '五', '六', '日'];
+  week.forEach(function (w) {
+    var d = document.createElement('div');
+    d.className = 'checkin-weekday';
+    d.textContent = w;
+    cal.appendChild(d);
+  });
+  var monthCount = 0;
+  var todayKey = day;
+  for (var i = 0; i < lead; i++) {
+    var e = document.createElement('div'); e.className = 'checkin-cell checkin-cell--future'; e.textContent = ''; cal.appendChild(e);
+  }
+  for (var dnum = 1; dnum <= days; dnum++) {
+    var key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(dnum).padStart(2, '0');
+    var cell = document.createElement('div');
+    cell.className = 'checkin-cell';
+    cell.textContent = dnum;
+    if (key === todayKey) cell.classList.add('checkin-cell--today');
+    if (recordSet[key]) { cell.classList.add('checkin-cell--checked'); var mark = document.createElement('span'); mark.className = 'ck-mark'; mark.textContent = '✓'; cell.appendChild(mark); monthCount++; }
+    else if (key < todayKey) cell.classList.add('checkin-cell--missed');
+    else if (key > todayKey) cell.classList.add('checkin-cell--future');
+    cal.appendChild(cell);
+  }
+  document.getElementById('checkin-month-count').textContent = monthCount;
+  var btn = document.getElementById('checkin-btn');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      fetch('/checkin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res && res.ok) {
+            var wrap = btn.parentElement;
+            btn.remove();
+            var done = document.createElement('span');
+            done.className = 'checkin-done';
+            done.textContent = '✅ 今日已签到';
+            wrap.insertBefore(done, wrap.firstChild);
+            var cells = document.querySelectorAll('.checkin-cell--today');
+            cells.forEach(function (c) {
+              c.classList.remove('checkin-cell--missed');
+              c.classList.add('checkin-cell--checked');
+              var mm = document.createElement('span'); mm.className = 'ck-mark'; mm.textContent = '✓'; c.appendChild(mm);
+            });
+            var mc = document.getElementById('checkin-month-count');
+            mc.textContent = parseInt(mc.textContent, 10) + 1;
+            var cnt = document.getElementById('checkin-count');
+            cnt.innerHTML = cnt.innerHTML.replace(/<b>(\d+)<\/b>/, function (_, n) { return '<b>' + (parseInt(n, 10) + 1) + '</b>'; });
+          }
+        }).catch(function () { });
+    });
+  }
+})();
+</script>
 {% endblock %}

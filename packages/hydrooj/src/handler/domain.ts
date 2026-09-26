@@ -25,16 +25,17 @@ import { log2 } from '../utils';
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
-        const [dudocs, upcount, ucount] = await this.paginate(
-            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 }, join: true }).sort({ rp: -1 }),
-            page,
-            'ranking',
-        );
-        const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
-        const udocs = dudocs.map((i) => udict[i.uid]);
+        // 单系统域部署：排名 = 全部注册用户，不依赖 domain.user 的 join 记录
+        // （Campux OAuth 注册不写 join 记录，按 join 查询会导致排名为空）。
+        // getList 返回带方法的 User 实例（模板需 hasPriv），内部已合并域内数据（rp/nAccept），
+        // 无 dudoc 的用户字段回落默认 0——现查现排，实时反映最新数据。
+        const udocList = await user.getMulti({ _id: { $gt: 1 } }).project({ _id: 1 }).toArray();
+        const udict = await user.getList(domainId, udocList.map((u) => u._id));
+        const udocs = Object.values(udict);
+        udocs.sort((a, b) => (b.rp || 0) - (a.rp || 0) || a._id - b._id);
         this.response.template = 'ranking.html';
         this.response.body = {
-            udocs, upcount, ucount, page,
+            udocs, upcount: 1, ucount: 1, page: 1,
         };
     }
 }

@@ -14,7 +14,7 @@
   </div>
 
 {% set show_topics = false %}
-{% include "partials/footer.html" %}
+{% if handler.response.template != 'user_login.html' %}{% include "partials/footer.html" %}{% endif %}
 </div>
 
 {% include "partials/login_dialog.html" %}

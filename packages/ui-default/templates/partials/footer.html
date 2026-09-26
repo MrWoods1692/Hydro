@@ -7,7 +7,7 @@
       <div class="footer__brand-text">
         <h1>奎光 OJ</h1>
         <p>桂林市奎光学校 · 编程学习在线测评平台<br>以赛促学，以代码连接校园。</p>
-        <p class="footer__brand-online"><span class="online-dot"></span> 当前在线 <b>{{ model.system.get('ui.onlineCount')|default(0) }}</b> 人</p>
+        <p class="footer__brand-online" id="online-badge"><span class="online-dot"></span> 当前在线 <b>{{ model.system.get('ui.onlineCount')|default(0) }}</b> 人</p>
       </div>
     </div>
     <div class="footer__cols clearfix">
@@ -72,13 +72,6 @@
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Copyright Complaint') }}</a></li>
           {% endif %}
-          <li class="footer__extra-link-item">
-            {% if handler.session.legacy %}
-              <a href="/legacy">{{ _('Standard mode') }}</a>
-            {% else %}
-              <a href="/legacy?legacy=true">{{ _('Legacy mode') }}</a>
-            {% endif %}
-          </li>
           <li class="footer__extra-link-item nojs--hide" data-dropdown-target="#menu-footer-theme">
             <span><span class="icon icon-global"></span> {{ _('Theme') }} <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-theme">
@@ -108,3 +101,65 @@
     </div>
   </div></div>
 </div>
+<script>
+// 在线名单弹层：点击页脚在线徽章，拉取 /online 展示当前登录的在线用户
+(function () {
+  var badge = document.getElementById('online-badge');
+  if (!badge) return;
+  badge.addEventListener('click', function () {
+    fetch('/online').then(function (r) { return r.json(); }).then(function (data) {
+      show(data.online || []);
+    }).catch(function () { });
+  });
+  function show(list) {
+    close();
+    var overlay = document.createElement('div');
+    overlay.id = 'online-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(72,54,26,0.32);z-index:2147483002;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#FFFFFF;border:1px solid #D8EAE3;border-radius:12px;box-shadow:0 16px 44px rgba(31,107,92,0.25);padding:22px 26px;min-width:280px;max-width:400px;max-height:70vh;overflow:auto;color:#33413B;font-family:var(--font-family),sans-serif;';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;';
+    head.innerHTML = '<div style="font-size:16px;font-weight:700;color:#6B4F0F;letter-spacing:.06em;">正在学习的人</div>';
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'border:0;background:none;font-size:16px;cursor:pointer;color:#2E8B7A;';
+    head.appendChild(closeBtn);
+    card.appendChild(head);
+    if (!list.length) {
+      var empty = document.createElement('div');
+      empty.style.cssText = 'text-align:center;color:#9A8C6A;padding:14px 0;font-size:13px;';
+      empty.textContent = '暂时没有同学在线～';
+      card.appendChild(empty);
+    } else {
+      var ul = document.createElement('ul');
+      ul.style.cssText = 'margin:0;padding:0;list-style:none;';
+      list.forEach(function (u) {
+        var li = document.createElement('li');
+        li.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #F1E8D2;font-size:14px;';
+        var avatar = document.createElement('img');
+        avatar.src = u.avatar ? u.avatar : '/img/avatar.png';
+        avatar.onerror = function () { avatar.src = '/img/avatar.png'; };
+        avatar.style.cssText = 'width:26px;height:26px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px #F4E7C3;';
+        avatar.alt = '';
+        var name = document.createElement('span');
+        name.textContent = u.uname || ('用户 ' + u.uid);
+        var dot = document.createElement('span');
+        dot.style.cssText = 'margin-left:auto;width:7px;height:7px;border-radius:50%;background:#35B37E;';
+        li.appendChild(avatar); li.appendChild(name); li.appendChild(dot);
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+    }
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    function dispose() { overlay.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') dispose(); }
+    closeBtn.addEventListener('click', dispose);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) dispose(); });
+    document.addEventListener('keydown', onKey);
+  }
+  function close() { var o = document.getElementById('online-overlay'); if (o) o.remove(); }
+})();
+</script>

@@ -33,7 +33,18 @@ import {
 async function successfulAuth(this: Handler, udoc: User) {
     if (udoc._id !== 0) {
         await this.ctx.serial('auth/before-login', this, udoc);
-        await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
+        const now = new Date();
+        const raw = (udoc as any)._udoc || {};
+        await user.setById(udoc._id, {
+            loginat: now,
+            // 注册时间口径：最早一次登录时间。新账号首次登录即记；老账号回填最早可考时间（regat），避免把补记时刻当成首次登录。
+            ...(raw.firstLogin ? {} : { firstLogin: raw.regat || now }),
+            loginip: this.request.ip,
+        });
+        // 默认授予持久会话（30 天）：OAuth/WebAuthn 登录路径不会设置 session.save，
+        // 不设默认会落入 3 小时的未保存会话导致频繁掉线；账号密码登录的 rememberme
+        // 在调用本函数之后另行赋值，仍可覆盖此默认值。
+        this.session.save = true;
     }
     this.context.HydroContext.user = udoc;
     this.session.viewLang = '';
@@ -43,8 +54,6 @@ async function successfulAuth(this: Handler, udoc: User) {
     this.session.scope = PERM.PERM_ALL.toString();
     this.session.oauthBind = null;
     this.session.recreate = true;
-    // OAuth 建号尚无本地密码时，允许本次登录会话内直接设置密码（等同 sudo）
-    if (udoc._id !== 0 && (udoc as any)._udoc?.noLocalPassword) this.session.sudo = Date.now();
     if (udoc._id !== 0) {
         await oplog.log(this, 'user.loginSuccess', { uid: udoc._id });
         await this.ctx.serial('auth/login', this, udoc);
@@ -112,27 +121,18 @@ class UserLoginHandler extends Handler {
 
 class UserSudoHandler extends Handler {
     async get() {
+        // 控制面板等敏感操作不再要求密码确认：能触达 sudo 页的已登录用户直接放行，
+        // 具体操作的权限仍由对应 handler 的 priv/perm 检查兜底。
         if (!this.session.sudoArgs?.method) throw new ForbiddenError();
-        this.response.template = 'user_sudo.html';
+        this.session.sudo = Date.now();
+        if (this.session.sudoArgs.method.toLowerCase() === 'get') {
+            this.response.redirect = this.session.sudoArgs.redirect;
+            this.session.sudoArgs.method = null;
+        } else this.back();
     }
 
-    @param('password', Types.String, true)
-    @param('tfa', Types.String, true)
-    @param('authnChallenge', Types.String, true)
-    async post(domainId: string, password = '', tfa = '', authnChallenge = '') {
+    async post() {
         if (!this.session.sudoArgs?.method) throw new ForbiddenError();
-        await Promise.all([
-            this.limitRate('user_sudo', 60, 5, '{{user}}'),
-            oplog.log(this, 'user.sudo', {}),
-        ]);
-        if (this.user.authn && authnChallenge) {
-            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (challenge?.uid !== this.user._id) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
-            if (!challenge.verified) throw new ValidationError('challenge');
-            await token.del(authnChallenge, token.TYPE_WEBAUTHN);
-        } else if (this.user.tfa && tfa) {
-            if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-        } else if (!this.user._udoc.noLocalPassword) await this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -343,34 +343,6 @@ class UserRegisterWithCodeHandler extends Handler {
     }
 }
 
-class UserSetPasswordHandler extends Handler {
-    noCheckPermView = true;
-
-    async get() {
-        if (!this.user._id) throw new ForbiddenError();
-        if (!this.user._udoc.noLocalPassword) {
-            this.response.redirect = this.url('homepage');
-            return;
-        }
-        this.response.template = 'user_setpass.html';
-    }
-
-    @param('password', Types.Password)
-    @param('verifyPassword', Types.Password)
-    async post(domainId: string, password: string, verify: string) {
-        if (!this.user._id) throw new ForbiddenError();
-        if (password !== verify) throw new VerifyPasswordError();
-        if (!this.user._udoc.noLocalPassword) {
-            this.response.redirect = this.url('homepage');
-            return;
-        }
-        await user.setById(this.user._id, { noLocalPassword: false });
-        await user.setPassword(this.user._id, password);
-        this.session.sudo = null;
-        this.response.redirect = this.url('homepage');
-    }
-}
-
 class UserLostPassHandler extends Handler {
     noCheckPermView = true;
 
@@ -541,9 +513,7 @@ class OauthCallbackHandler extends Handler {
             if (Object.keys(update).length) await user.setById(effective, update);
             const eudoc = await user.getById('system', effective);
             await successfulAuth.call(this, eudoc);
-            this.response.redirect = (eudoc as any)._udoc?.noLocalPassword
-                ? this.url('user_setpass')
-                : (this.session.oauthRedirect || this.url('homepage'));
+            this.response.redirect = this.session.oauthRedirect || this.url('homepage');
             delete this.session.oauthRedirect;
             return;
         }
@@ -555,9 +525,7 @@ class OauthCallbackHandler extends Handler {
             if (Object.keys(update2).length) await user.setById(udoc._id, update2);
             const mudoc = await user.getById('system', udoc._id);
             await successfulAuth.call(this, mudoc);
-            this.response.redirect = (mudoc as any)._udoc?.noLocalPassword
-                ? this.url('user_setpass')
-                : (this.session.oauthRedirect || this.url('homepage'));
+            this.response.redirect = this.session.oauthRedirect || this.url('homepage');
             delete this.session.oauthRedirect;
             return;
         }
@@ -581,8 +549,6 @@ class OauthCallbackHandler extends Handler {
             if (r.bio) set.bio = r.bio;
             if (r.viewLang) set.viewLang = r.viewLang;
             if (r.avatar) set.avatar = r.avatar;
-            // 仅新建账号需要强制设置本地密码
-            set.noLocalPassword = true;
             const mail = r.email || `${randomstring(16)}@oauth.invalid`;
             let uid: number;
             const preferredUid = Number.isSafeInteger(r.uid) && r.uid >= 2 ? r.uid : undefined;
@@ -600,9 +566,7 @@ class OauthCallbackHandler extends Handler {
             await Promise.all(ids.map((i) => this.ctx.oauth.set(args.type, i, uid)));
             const nudoc = await user.getById('system', uid);
             await successfulAuth.call(this, nudoc);
-            this.response.redirect = (nudoc as any)._udoc?.noLocalPassword
-                ? this.url('user_setpass')
-                : (this.session.oauthRedirect || this.url('homepage'));
+            this.response.redirect = this.session.oauthRedirect || this.url('homepage');
             delete this.session.oauthRedirect;
             return;
         }
@@ -724,30 +688,8 @@ declare module '@hydrooj/framework' {
 }
 
 export async function apply(ctx: Context) {
-    // OAuth 建号尚无本地密码时，强制先设置密码，避免用户找不到随机密码
-    ctx.on('handler/create/http', (h: Handler) => {
-        const originalPrepare = (h as any).prepare;
-        (h as any).prepare = async function prepare(this: Handler, ...args: any[]) {
-            if (typeof originalPrepare === 'function') {
-                const ret = await originalPrepare.apply(this, args);
-                if (ret === 'cleanup') return ret;
-            }
-            const u = this.user as any;
-            if (!u?._id || !u?._udoc?.noLocalPassword) return;
-            const path = this.request.path;
-            const allow = [
-                '/user/setpass', '/logout', '/user/login', '/login',
-                '/user/oauth', '/oauth/', '/user/webauthn', '/user/tfa',
-                '/api/', '/resource/', '/fs/', '/file', '/favicon',
-            ];
-            if (allow.some((p) => path.startsWith(p))) return;
-            this.response.redirect = this.url('user_setpass');
-            return 'cleanup';
-        };
-    });
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type/login', OauthHandler);
-    ctx.Route('user_setpass', '/user/setpass', UserSetPasswordHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_tfa', '/user/tfa', UserTFAHandler);
     ctx.Route('user_webauthn', '/user/webauthn', UserWebauthnHandler);

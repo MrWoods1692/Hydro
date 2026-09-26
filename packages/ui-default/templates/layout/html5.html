@@ -6,7 +6,7 @@
 {% import "components/user.html" as user with context %}
 <!DOCTYPE html>
 {% set theme = (handler.user|default({})).theme|default('default') %}
-<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} theme--{{ theme }} nojs" data-mantine-color-scheme="{{ 'dark' if theme.includes('dark') else 'light' }}" lang="{{ UserContext.viewLang }}" data-app="Hydro">
+<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} theme--{{ theme }} nojs" data-mantine-color-scheme="{{ 'dark' if theme.includes('dark') else 'light' }}" lang="zh-CN" data-app="Hydro">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -61,7 +61,7 @@
 <body>
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
     <script type="text/javascript" src="{{ UiContext.cdn_prefix if UiContext.cdn_dynamic else '/' }}resource/{{ UiContext.constantVersion }}/entry.js"></script>
-    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
+    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-zh.js"></script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js?v={{ assetV }}"></script>
   {% endif %}
   {% block body %}{% endblock %}

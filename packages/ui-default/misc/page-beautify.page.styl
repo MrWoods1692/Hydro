@@ -1,0 +1,252 @@
+// 页面级差异化装饰：每页独立配色/细节，不做成统一模板。
+// 作用域 = html[data-page=...]
+
+// ========== 题库页 · 青瓷知识库 ==========
+html[data-page='problem_main']
+  .search
+    border: 2px solid #BFE3D9
+    border-radius: 999px
+    box-shadow: 0 6px 20px rgba(#2E8B7A, 0.13)
+    background: #FFF
+    overflow: hidden
+    transition: border-color .2s, box-shadow .2s
+
+    &:focus-within
+      border-color: $primary-color
+      box-shadow: 0 8px 26px rgba(#2E8B7A, 0.2)
+
+  .side .section__title::before
+    content: '✦ '
+    color: $secondary-color
+
+  // 分类出现时轻微错落
+  .side .category
+    li a
+      border-radius: rem(6px)
+      padding: rem(2px 8px)
+      transition: background .15s, color .15s
+
+      &:hover
+        background: #E7F3EF
+        color: #1F6B5C
+
+// ========== 推荐框 · 缘分刷题（金=点缀 CTA 保留） ==========
+html[data-page='problem_main'] [data-fragment-id='problem_lucky']
+  padding: rem(14px 16px 18px)
+  background: linear-gradient(140deg, #F0F8F5 0%, #FDF6DE 100%)
+  border: 1px solid #E3D9A8
+  border-radius: rem(14px)
+  margin: rem(0 16px 16px)
+  box-shadow: 0 8px 24px rgba(#2E8B7A, 0.12)
+
+  .lucky-btn
+    display: block
+    text-align: center
+    background: linear-gradient(120deg, #C9A227 0%, #A87C2B 100%)
+    color: #FFF
+    border-radius: 999px
+    padding: rem(10px 0)
+    font-weight: 700
+    letter-spacing: 0.06em
+    font-size: rem(15px)
+    box-shadow: 0 6px 16px rgba(#A87C2B, 0.35)
+    transition: transform .15s, box-shadow .15s
+
+    &:hover
+      transform: translateY(-1px)
+      box-shadow: 0 10px 22px rgba(#A87C2B, 0.4)
+      color: #FFF
+      text-decoration: none
+
+// ========== 训练页 · 浅蓝成长系 ==========
+html[data-page='training_main']
+  .training__item
+    position: relative
+    border-radius: rem(12px)
+    overflow: hidden
+    transition: background .18s, box-shadow .18s
+
+    &::before
+      content: ''
+      position: absolute
+      left: 0
+      top: 0
+      bottom: 0
+      width: 4px
+      background: linear-gradient(180deg, #4EA8DE, #7DCBF5)
+
+    &:hover
+      background: #F0F7FC
+      box-shadow: 0 8px 22px rgba(#4EA8DE, 0.15)
+
+  .training__participants .numbox__num
+    color: #2E8B7A
+
+  .training__progress-bar
+    height: rem(6px)
+    border-radius: 999px
+    background: #E0EEF8
+
+    .training__progress-track
+      border-radius: 999px
+      background: linear-gradient(90deg, #7DCBF5, #4EA8DE)
+
+  .training__title
+    font-size: rem(17px)
+
+// ========== 比赛页 · 竞技紫红 ==========
+html[data-page='contest_main']
+  // 进行中/即将开始的焦点卡
+  .section--contest.live, .section--contest.ready
+    border-radius: rem(16px)
+    border: 0
+    box-shadow: 0 14px 34px rgba(#7A3E99, 0.28)
+    color: #FFF
+    margin-bottom: rem(22px)
+
+    .status_title
+      color: rgba(#FFF, 0.85)
+      letter-spacing: 0.12em
+
+    h1
+      color: #FFF
+
+    .info
+      color: rgba(#FFF, 0.88)
+
+    .detail-button
+      border-radius: 999px
+      background: rgba(#FFF, 0.16)
+      border: 1.5px solid #FFF
+      color: #FFF
+
+      &:hover
+        background: #FFF
+        color: #7A3E99
+
+  .section--contest.live
+    background: linear-gradient(130deg, #9C2F5E 0%, #7A3E99 60%, #5B2E8F 100%)
+
+  .section--contest.ready
+    background: linear-gradient(130deg, #5B2E8F 0%, #7A3E99 100%)
+
+  // 列表项：按赛制着色的左边条
+  .contest__item
+    position: relative
+    border-radius: rem(12px)
+    overflow: hidden
+    transition: transform .15s, box-shadow .15s
+
+    &:hover
+      transform: translateX(3px)
+      box-shadow: 0 8px 20px rgba(#7A3E99, 0.14)
+
+    &::before
+      content: ''
+      position: absolute
+      left: 0
+      top: rem(14px)
+      bottom: rem(14px)
+      width: 4px
+      border-radius: 999px
+
+  .contest-type--acm::before
+    background: #6BB67A
+
+  .contest-type--oi::before
+    background: #E8B339
+
+  .contest-type--ioi::before
+    background: #4A9FE8
+
+  .contest__date .numbox__num
+    color: #8A3FA8
+
+// ========== 作业页 · 暖橙 ==========
+html[data-page='homework_main']
+  .homework__item
+    position: relative
+    border-radius: rem(12px)
+    overflow: hidden
+    transition: background .18s, box-shadow .18s
+
+    &::before
+      content: ''
+      position: absolute
+      left: 0
+      top: 0
+      bottom: 0
+      width: 4px
+      background: linear-gradient(180deg, #F2994A, #D9782A)
+
+    &:hover
+      background: #FFF8EE
+      box-shadow: 0 8px 20px rgba(#E08A2E, 0.16)
+
+  .homework__date .numbox__num
+    color: #D9782A
+
+  .homework__title
+    font-size: rem(17px)
+
+// ========== 讨论页 · 青绿蓝 ==========
+html[data-page='discussion_main']
+  .medium-9 .section__list__item
+    border-radius: rem(12px)
+    margin: rem(6px 10px)
+    border: 1px solid #DFEDE8
+    transition: border-color .2s, box-shadow .2s
+
+    &:hover
+      border-color: #A8D8CB
+      box-shadow: 0 8px 20px rgba(#2E8B7A, 0.12)
+
+  .medium-9 .section__title::before
+    content: '💬 '
+    font-size: rem(18px)
+
+  .medium-3 .section
+    border-radius: rem(12px)
+
+    .section__title
+      color: #2E8B7A
+
+    a
+      transition: color .15s
+
+      &:hover
+        color: #4EA8DE
+
+// ========== 排名页 · 深金领奖台 ==========
+html[data-page='ranking']
+  .data-table
+    border-radius: rem(14px)
+    overflow: hidden
+    box-shadow: 0 10px 28px rgba(#8A6A12, 0.14)
+
+    thead th
+      background: linear-gradient(120deg, #6B5310 0%, #8A6A12 55%, #B08D2C 100%)
+      color: #FFF7E0
+      border-bottom: 0
+      letter-spacing: 0.04em
+
+    tbody tr
+      transition: background .15s
+
+      &:hover
+        background: #FBF3DB
+
+    .col--rank
+      font-weight: 700
+      color: #8A6A12
+
+      .rank-medal
+        margin-right: rem(2px)
+
+  // 前 3 名整行淡金强调
+  tbody tr:nth-child(2), // 当前用户行（若有）
+  tbody tr:not(:first-child):nth-child(-n+4)
+    background: linear-gradient(90deg, rgba(#F3E6BC, 0.5), transparent 60%)
+
+    &:hover
+      background: #FAEFCF

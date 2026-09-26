@@ -67,6 +67,7 @@ export class User {
     priv: number;
     regat: Date;
     loginat: Date;
+    firstLogin: Date;
     perm: bigint;
     role: string;
     scope: bigint;
@@ -95,6 +96,7 @@ export class User {
         this.priv = udoc.priv;
         this.regat = udoc.regat;
         this.loginat = udoc.loginat;
+        this.firstLogin = udoc.firstLogin;
         this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';

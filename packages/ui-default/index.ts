@@ -50,18 +50,6 @@ class SetThemeHandler extends Handler {
   }
 }
 
-class LegacyModeHandler extends Handler {
-  noCheckPermView = true;
-
-  @param('legacy', Types.Boolean)
-  @param('nohint', Types.Boolean)
-  async get({ }, legacy = false, nohint = false) {
-    this.session.legacy = legacy;
-    this.session.nohint = nohint;
-    this.back();
-  }
-}
-
 class MarkdownHandler extends Handler {
   noCheckPermView = true;
 
@@ -199,7 +187,6 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
-  ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.on('handler/after/DiscussionRaw', async (that) => {

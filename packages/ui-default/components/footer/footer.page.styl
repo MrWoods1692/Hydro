@@ -8,17 +8,16 @@ $footer-extra-link-gap = 20px
 // Floating rounded card: the whole footer is one white card on the warm page.
 .footer__card
   background: #FFF
-  border: 1px solid #EDE2C6
-  border-top: 2px solid $secondary-color
-  border-radius: rem(16px)
-  box-shadow: 0 10px 30px rgba(#B89B5E, 0.16)
+  border: 1px solid #D8EAE3
+  border-radius: rem(8px)
+  box-shadow: 0 10px 30px rgba(#2E8B7A, 0.12)
   padding: rem(28px 28px 6px)
 
   +mobile()
-    border-radius: rem(12px)
+    border-radius: rem(8px)
     margin: 0 rem($grid-padding)
     padding: rem($grid-padding)
-    box-shadow: 0 6px 18px rgba(#B89B5E, 0.12)
+    box-shadow: 0 6px 18px rgba(#2E8B7A, 0.1)
 
 .footer__brand
   display: flex
@@ -26,7 +25,7 @@ $footer-extra-link-gap = 20px
   gap: rem(14px)
   padding-bottom: rem(18px)
   margin-bottom: rem(18px)
-  border-bottom: 1px solid #EFE6CE
+  border-bottom: 1px solid #DFF0EA
 
   +mobile()
     align-items: flex-start
@@ -38,7 +37,7 @@ $footer-extra-link-gap = 20px
   height: rem(52px)
   border-radius: 50%
   background: #FFF
-  box-shadow: 0 0 0 3px #F4E7C3
+  box-shadow: 0 0 0 3px #D2EBE3
   object-fit: contain
   flex: none
 
@@ -46,7 +45,7 @@ $footer-extra-link-gap = 20px
   h1
     margin: 0
     font-size: rem(20px)
-    color: #6B4F0F
+    color: #1F6B5C
     letter-spacing: 0.12em
     font-weight: 700
 
@@ -62,11 +61,17 @@ $footer-extra-link-gap = 20px
   gap: rem(7px)
   margin-top: rem(10px)
   padding: rem(3px 12px)
-  border-radius: 999px
-  background: #F7EFDA
-  color: #8A6A12
+  border-radius: rem(6px)
+  background: #E7F3EF
+  color: #1F6B5C
   font-size: rem(12px)
   font-weight: 500
+  cursor: pointer
+  transition: background .15s, box-shadow .15s
+
+  &:hover
+    background: #D2EBE3
+    box-shadow: 0 4px 12px rgba(#2E8B7A, 0.2)
 
   b
     color: $primary-color
@@ -104,7 +109,7 @@ $footer-extra-link-gap = 20px
 
   h1
     font-size: rem(14px)
-    color: #8A6A12
+    color: #2E8B7A
     letter-spacing: 0.06em
 
     +mobile()
@@ -164,7 +169,7 @@ $footer-extra-link-gap = 20px
   padding: rem(18px 0 20px)
   margin-top: rem(16px)
   font-size: rem($font-size-small)
-  border-top: 1px solid #EFE6CE
+  border-top: 1px solid #DFF0EA
 
 .footer__extra-link-item
   float: left
