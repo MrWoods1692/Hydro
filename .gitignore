@@ -39,8 +39,10 @@ tsconfig.*.json
 packages/**/*.js
 !/build/*.js
 
-# Local fork data (memory mongo logs, file storage, brand scripts) — never commit
-data/
+# Local fork runtime artifacts (uploaded files, memory mongo logs) — never commit;
+# brand/startup scripts under data/ ARE tracked.
+data/file/
+data/*.log
 !**/bin/*.js
 !*.page.js
 !packages/register/index.js
@@ -72,4 +74,4 @@ packages/*/public/assets
 node_modules.*
 
 # local OAuth secrets for Linux scripts
-scripts/env.campux
+# scripts/env.campux is intentionally tracked (per owner decision)
