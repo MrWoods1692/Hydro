@@ -53,8 +53,11 @@
               </tr>
               {% endif %}
               {%- for udoc in udocs -%}
-              <tr>
-                <td class="col--rank">{% set rank = (page - 1) * model.system.get('pagination.ranking') + loop.index %}{% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% endif %}<span class="rank-medal"></span>{{ rank }}</td>
+              {% set rank = (page - 1) * model.system.get('pagination.ranking') + loop.index %}
+              <tr class="rank-row{% if rank <= 3 %} rank-row--top rank-row--{{ rank }}{% endif %}">
+                <td class="col--rank">
+                  <span class="rank-medal{% if rank == 1 %} rank-medal--1{% elif rank == 2 %} rank-medal--2{% elif rank == 3 %} rank-medal--3{% endif %}">{% if rank <= 3 %}<span class="rank-medal__icon">{{ ['🥇','🥈','🥉'][rank - 1] }}</span>{% endif %}<span class="rank-num">{{ rank }}</span></span>
+                </td>
                 <td class="col--user">{{ user.render_inline(udoc) }}</td>
                 <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
                 {% for key, def in model.rp %}

@@ -236,17 +236,63 @@ html[data-page='ranking']
       &:hover
         background: #FBF3DB
 
+    // 当前用户行（模板里无 class，靠首列渲染内容区分不了 —— 用淡紫描边强调）
+    tbody tr:first-child
+      background: linear-gradient(90deg, rgba(#C9B6E4, 0.22), transparent 70%)
+
+      .col--user
+        font-weight: 700
+
     .col--rank
       font-weight: 700
       color: #8A6A12
+      white-space: nowrap
 
       .rank-medal
+        display: inline-flex
+        align-items: center
+        gap: rem(4px)
         margin-right: rem(2px)
 
-  // 前 3 名整行淡金强调
-  tbody tr:nth-child(2), // 当前用户行（若有）
-  tbody tr:not(:first-child):nth-child(-n+4)
-    background: linear-gradient(90deg, rgba(#F3E6BC, 0.5), transparent 60%)
+      .rank-medal__icon
+        font-size: rem(18px)
+        line-height: 1
+
+      .rank-num
+        font-variant-numeric: tabular-nums
+
+  // 前三名：整行加粗 + 各自专属底色，从左向右淡出
+  tbody tr.rank-row--top
+    td
+      font-weight: 700
+
+    .col--rank
+      color: #6B5310
+
+  tbody tr.rank-row--1
+    background: linear-gradient(90deg, rgba(#F5D06F, 0.45), transparent 62%)
 
     &:hover
-      background: #FAEFCF
+      background: #FBE9B6
+
+  tbody tr.rank-row--2
+    background: linear-gradient(90deg, rgba(#D6DCE4, 0.5), transparent 62%)
+
+    &:hover
+      background: #EAF0F6
+
+  tbody tr.rank-row--3
+    background: linear-gradient(90deg, rgba(#E8C39A, 0.45), transparent 62%)
+
+    &:hover
+      background: #F7E6D2
+
+  // 前三名名次数字：金 / 银 / 铜
+  tbody .rank-medal--1 .rank-num
+    color: #A87C2B
+
+  tbody .rank-medal--2 .rank-num
+    color: #6E7A8C
+
+  tbody .rank-medal--3 .rank-num
+    color: #B07A45
