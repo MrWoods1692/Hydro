@@ -12,7 +12,7 @@ import {
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
 import { TokenDoc, Udoc, User } from '../interface';
-import avatar from '../lib/avatar';
+import avatar, { qqAvatar } from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
@@ -644,6 +644,7 @@ const UserApi = {
         search: Schema.string(),
         limit: Schema.number().step(1),
         exact: Schema.boolean(),
+        all: Schema.boolean(),
     }), async (c, arg) => {
         const auto = (arg.ids?.length && arg.ids) || arg.auto || [];
         if (auto.length) {
@@ -662,6 +663,18 @@ const UserApi = {
                 if (udoc) result.push(udoc);
             }
             return result;
+        }
+        // all: list every user in the domain (used by the message sidebar).
+        if (arg.all) {
+            if (!c.user.hasPriv(PRIV.PRIV_USER_PROFILE)) return [];
+            const dudocs = await domain.getMultiUserInDomain(arg.domainId, {}).project({ uid: 1 }).limit(500).toArray();
+            const users = (await Promise.all(dudocs.map(({ uid }) => user.getById(arg.domainId, uid)))).filter(Boolean);
+            return users.map((u) => ({
+                _id: u._id,
+                uname: u.uname,
+                displayName: u.displayName || u.uname,
+                avatarUrl: qqAvatar({ avatar: u.avatar, qq: (u as any)._udoc?.qq }, 128),
+            }));
         }
         if (!arg.search) return [];
         const udoc = await user.getById(arg.domainId, +arg.search)

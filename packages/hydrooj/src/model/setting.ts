@@ -253,7 +253,7 @@ PreferenceSetting(
 );
 
 AccountSetting(
-    Setting('setting_info', 'qq', null, 'text', 'QQ'),
+    Setting('setting_info', 'qq', null, 'text', 'QQ', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
     Setting('setting_info', 'school', '', 'text', 'School', '', FLAG_PRIVATE),
@@ -300,15 +300,6 @@ const ignoreUA = [
 
 // This is a showcase of how to use Schema to define settings.
 SystemSetting(Schema.object({
-    smtp: Schema.object({
-        user: Schema.string().default('').description('SMTP Username'),
-        pass: Schema.string().default('').description('SMTP Password').role('password'),
-        host: Schema.string().default('').description('SMTP Server Host'),
-        port: Schema.number().step(1).min(1).max(65535).default(465).description('SMTP Server Port'),
-        from: Schema.string().default('').description('Mail From'),
-        secure: Schema.boolean().default(false).description('SSL'),
-        verify: Schema.boolean().default(true).description('Verify register email'),
-    }).extra('family', 'setting_smtp'),
     server: Schema.object({
         allowInvite: Schema.boolean().default(true).description('Allow invite users'),
         showDefaultRole: Schema.boolean().default(false).description('Show default role users in domain user management'),

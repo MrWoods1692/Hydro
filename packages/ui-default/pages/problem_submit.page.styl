@@ -6,6 +6,191 @@
     width: rem(160px)
     text-align: center
 
+  // ===== 标题区 =====
+  .section
+    border-radius: rem(12px)
+    overflow: hidden
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06)
+
+  .section__header
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAFAF7 100%)
+    padding: rem(18px 24px)
+    border-bottom: 1px solid #EEEEEA
+
+    .section__title
+      color: #3A3A38
+      font-size: rem(18px)
+      font-weight: 700
+      letter-spacing: 0.01em
+
+  .section__body
+    background: #FFFFFF
+    padding: rem(20px 24px)
+
+  // ===== 代码语言选择器 =====
+  #codelang-selector
+    margin-bottom: rem(16px)
+
+    .form__item
+      display: flex
+      flex-wrap: wrap
+      gap: rem(6px 8px)
+      padding: 0
+      border: 0
+
+    .form__item .select__wrapper,
+    .form__item .lang-item,
+    .form__item .tag
+      padding: rem(5px 12px)
+      border: 1px solid #E8E6E2
+      border-radius: rem(6px)
+      background: #F7F7F5
+      color: #6A6560
+      font-size: rem(13px)
+      cursor: pointer
+      transition: all 0.15s ease
+
+    .form__item .lang-item.selected,
+    .form__item .tag.selected,
+    .form__item .lang-item.active
+      background: #3A3A38
+      border-color: #2A2A28
+      color: #FFFFFF
+      font-weight: 600
+
+    .form__item .lang-item:hover,
+    .form__item .tag:hover
+      background: #F0EFEB
+      border-color: #C8C4BC
+      color: #3A3A38
+
+    .form__item .lang-item.selected:hover,
+    .form__item .tag.selected:hover
+      background: #2A2A28
+
+  // ===== 代码编辑区 =====
+  .form__item.has-code-editor,
+  .form__item[name='code']
+    border: 1px solid #E8E6E2
+    border-radius: rem(8px)
+    overflow: hidden
+    background: #1E1E1E
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)
+
+    .form__title,
+    label
+      background: #FAFAF8
+      color: #3A3A38
+      border-bottom: 1px solid #E8E6E2
+      font-weight: 600
+      padding: rem(8px 12px)
+
+    textarea,
+    .monaco-editor
+      border: 0
+      border-radius: 0
+      font-size: rem(13px)
+      line-height: 1.6
+
+    textarea
+      background: #1E1E1E
+      color: #D4D4D4
+      padding: rem(12px 14px)
+      min-height: rem(400px)
+
+      &::placeholder
+        color: #6A6A6A
+
+  // ===== 文件上传 =====
+  input[type='file']
+    font-size: rem(13px)
+    color: #6A6560
+    cursor: pointer
+
+    &::-webkit-file-upload-button
+      background: #F7F7F5
+      border: 1px solid #E8E6E2
+      border-radius: rem(6px)
+      padding: rem(5px 12px)
+      color: #3A3A38
+      font-size: rem(12px)
+      cursor: pointer
+      transition: all 0.15s
+
+      &:hover
+        background: #F0EFEB
+        border-color: #C8C4BC
+
+  // ===== 提交按钮 =====
+  input[type='submit'].button,
+  button.rounded.primary.button
+    background: linear-gradient(135deg, #6A6560 0%, #3A3A38 100%) !important
+    border: 0 !important
+    color: #FFFFFF !important
+    border-radius: rem(8px) !important
+    padding: rem(10px 28px) !important
+    font-size: rem(14px) !important
+    font-weight: 700 !important
+    letter-spacing: 0.04em
+    box-shadow: 0 4px 12px rgba(58, 58, 56, 0.3) !important
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important
+
+    &:hover
+      transform: translateY(-1px)
+      box-shadow: 0 6px 18px rgba(58, 58, 56, 0.4) !important
+
+  // ===== 提示信息 =====
+  [name='hint']
+    margin-bottom: rem(16px)
+
+    blockquote.note
+      background: #FAFAF8
+      border-left: 3px solid #C8C4BC
+      color: #6A6560
+      border-radius: rem(6px)
+      padding: rem(10px 14px)
+
+      a
+        color: #3A3A38
+        font-weight: 600
+
+  // ===== 侧栏菜单 =====
+  .section--problem-sidebar
+    background: #FAFAF8
+    border: 1px solid #E8E6E2
+    border-radius: rem(10px)
+    overflow: hidden
+
+    .menu__item .menu__link
+      padding: rem(9px 20px)
+      color: #3A3A38
+      font-weight: 500
+
+      .icon
+        color: #9A9690
+
+      &:hover
+        background: #F0EFEB
+
+        .icon
+          color: #3A3A38
+
+      &.active
+        background: #FFFFFF
+        font-weight: 600
+        box-shadow: inset 3px 0 0 #6A6560
+
+        .icon
+          color: #3A3A38
+
+    .menu__seperator
+      background: #E8E6E2
+
+  // ===== 底部记录表格 =====
+  .data-table
+    border-radius: rem(8px)
+    overflow: hidden
+
   +mobile()
     .col--memory,
     .col--time

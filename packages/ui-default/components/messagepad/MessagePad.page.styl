@@ -1,8 +1,9 @@
 $list-height = 500px
-$sidebar-width = 250px
+$sidebar-width = 260px
 $input-height = 80px
-$input-padding = 10px
-$send-button-width = 50px
+$input-padding = 12px
+$send-button-width = 48px
+$radius = 10px
 
 #messagePad
   min-height: rem($list-height)
@@ -12,32 +13,159 @@ $send-button-width = 50px
   position: relative
 
 .messagepad__sidebar
-  border-right: 1px solid #EEE
+  border-right: 1px solid #E8E6E2
   float: left
   width: rem($sidebar-width)
+  background: #FAFAF8
+
+.messagepad__search
+  display: flex
+  align-items: center
+  gap: rem(8px)
+  padding: rem(10px 12px)
+  background: none
+  border-bottom: 1px solid #E8E6E2
+
+  .messagepad__search__icon
+    font-size: rem(16px)
+    color: #B0ACA6
+    flex: none
+
+  .messagepad__search__input
+    flex: 1
+    min-width: 0
+    height: rem(32px)
+    border: 1px solid #E8E6E2
+    border-radius: rem($radius)
+    background: #FFFFFF
+    padding: 0 rem(12px)
+    font-size: rem($font-size-secondary)
+    outline: 0
+    transition: border-color 0.2s ease, box-shadow 0.2s ease
+
+    &:focus
+      border-color: #C8C4BC
+      box-shadow: 0 0 0 3px rgba(200, 196, 188, 0.15)
+
+  .messagepad__search__clear
+    flex: none
+    border: 0
+    background: none
+    cursor: pointer
+    font-size: rem(18px)
+    color: #B0ACA6
+    line-height: 1
+    padding: 0
+
+    &:hover
+      color: #6A6560
 
 .messagepad__list
   overflow: auto
   height: rem($list-height)
+  padding: 0
+
+  &::-webkit-scrollbar
+    display: none
+  scrollbar-width: none
+
+.messagepad__list__status
+  padding: rem(16px)
+  text-align: center
+  color: #9A9690
+  font-size: rem($font-size-secondary)
+
+.messagepad__user-item
+  display: flex
+  align-items: center
+  gap: rem(10px)
+  padding: rem(10px 14px)
+  border-bottom: 1px solid #F0EFEB
+  cursor: pointer
+  transition: background 0.15s ease
+  margin: 0 rem(8px)
+  border-radius: rem($radius)
+  border-left: 3px solid transparent
+
+  &::-webkit-scrollbar
+    display: none
+  scrollbar-width: none
+
+  &:hover
+    background: rgba(247, 247, 245, 0.8)
+
+  &.active
+    background: rgba(240, 239, 235, 0.8)
+
+  .messagepad__user-meta
+    flex: 1
+    min-width: 0
+
+  .messagepad__username
+    font-size: rem($font-size-secondary)
+    margin: 0
+    color: #3A3A38
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    font-weight: 500
+
+  .messagepad__desc
+    font-size: rem($font-size-small)
+    color: #9A9690
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    margin-top: rem(2px)
+
+  .messagepad__user-profile-btn
+    flex: none
+    border: 0
+    background: none
+    cursor: pointer
+    color: #B0ACA6
+    font-size: rem(15px)
+    width: rem(28px)
+    height: rem(28px)
+    display: flex
+    align-items: center
+    justify-content: center
+    border-radius: rem(8px)
+    transition: background 0.15s ease, color 0.15s ease
+
+    &:hover
+      background: rgba(0, 0, 0, 0.06)
+      color: #6A6560
 
 .messagepad__header
   position: absolute
   left: rem($sidebar-width)
   right: 0
   top: 0
-  height: rem(30px)
-  padding: rem(5px)
-  text-align: center
-  border-bottom: 1px solid #eee;
+  height: rem(48px)
+  padding: rem(10px 20px)
+  display: flex
+  align-items: center
+  justify-content: center
+  border-bottom: 1px solid #E8E6E2
+  background: #FAFAF8
+  font-size: rem(14px)
+  font-weight: 600
+  color: #3A3A38
 
 .messagepad__content
   position: absolute
   left: rem($sidebar-width)
   right: 0
-  top: rem(30px)
+  top: rem(48px)
   bottom: rem($input-height)
   overflow: auto
-  padding: rem(30px)
+  padding: rem(24px 30px)
+  background: #FFFFFF
+
+  &::-webkit-scrollbar
+    display: none
+  scrollbar-width: none
 
 .messagepad__input
   display: none
@@ -46,7 +174,8 @@ $send-button-width = 50px
   right: 0
   bottom: 0
   height: $input-height
-  border-top: 1px solid #EEE
+  border-top: 1px solid #E8E6E2
+  background: #FAFAF8
 
   &.visible
     display: block
@@ -55,45 +184,60 @@ $send-button-width = 50px
     display: block
     appearance: none
     position: absolute
-    right: 0
+    right: rem(8px)
     width: rem($send-button-width)
-    top: 0
-    height: 100%
+    top: rem(8px)
+    bottom: rem(8px)
     border: 0
-    background: none
+    border-radius: rem($radius)
+    background: linear-gradient(135deg, #6A6560 0%, #3A3A38 100%)
     text-align: center
-    line-height: rem($input-height)
     font-size: rem($font-size-icon)
-    transition: background-color .1s, color .1s, opacity .1s
-    transition-timing-function: linear
+    color: #FFFFFF
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease
     outline: 0
 
     &:enabled
       cursor: pointer
-      background-color: $primary-color
-      color: #FFF
 
       &:hover
-        background-color: lighten($primary-color, 10%)
+        transform: translateY(-1px)
+        box-shadow: 0 4px 12px rgba(58, 58, 56, 0.4)
+
+      &:active
+        transform: translateY(0)
+        box-shadow: none
 
     &:disabled
-      color: $text-1-color
-      opacity: 0.3
+      color: #FFFFFF
+      background: #D0CCC4
+      opacity: 0.5
 
 .messagepad__textarea-container
   position: absolute
   left: rem($input-padding)
-  right: rem($send-button-width + $input-padding)
-  top: rem($input-padding)
-  bottom: rem($input-padding)
+  right: rem($send-button-width + $input-padding + 8px)
+  top: rem(8px)
+  bottom: rem(8px)
 
   textarea
     display: block
-    border: 0
-    background: none
-    padding: 0
+    border: 1px solid #E8E6E2
+    border-radius: rem($radius)
+    background: #FFFFFF
+    padding: rem(10px 14px)
     width: 100%
     height: 100%
     font-size: rem($font-size-secondary)
     resize: none
     outline: 0
+    color: #3A3A38
+    line-height: 1.5
+    transition: border-color 0.2s ease, box-shadow 0.2s ease
+
+    &::placeholder
+      color: #B0ACA6
+
+    &:focus
+      border-color: #C8C4BC
+      box-shadow: 0 0 0 3px rgba(200, 196, 188, 0.15)

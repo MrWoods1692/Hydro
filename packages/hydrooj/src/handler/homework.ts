@@ -156,12 +156,13 @@ class HomeworkEditHandler extends Handler {
                 (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / (Time.day / 100),
             ) / 100
             : 1;
+        const timezone = this.user.timeZone || moment.tz.guess(true);
         const beginAt = tid
-            ? moment(tdoc.beginAt).tz(this.user.timeZone)
-            : moment().add(1, 'day').tz(this.user.timeZone).hour(0).minute(0).millisecond(0);
+            ? moment(tdoc.beginAt).tz(timezone)
+            : moment().add(1, 'day').tz(timezone).hour(0).minute(0).millisecond(0);
         const penaltySince = tid
-            ? moment(tdoc.penaltySince).tz(this.user.timeZone)
-            : beginAt.clone().add(7, 'days').tz(this.user.timeZone).hour(23).minute(59).millisecond(0);
+            ? moment(tdoc.penaltySince).tz(timezone)
+            : beginAt.clone().add(7, 'days').tz(timezone).hour(23).minute(59).millisecond(0);
         this.response.template = 'homework_edit.html';
         this.response.body = {
             tdoc,
@@ -201,9 +202,10 @@ class HomeworkEditHandler extends Handler {
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
-        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
+        const timezone = this.user.timeZone || moment.tz.guess(true);
+        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, timezone);
         if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
-        const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
+        const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, timezone);
         if (!penaltySince.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');

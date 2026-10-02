@@ -1,21 +1,104 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <style>
-  .checkin-cal .section__title { color: #6B4F0F; letter-spacing: 0.06em; }
-  .checkin-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 2px 16px; }
-  .checkin-btn { border: 0; border-radius: 999px; padding: 11px 26px; font-size: 15px; font-weight: 700; cursor: pointer; color: #fff; background: linear-gradient(120deg, #2E8B7A 0%, #1F6B5C 100%); box-shadow: 0 6px 16px rgba(46, 139, 122, 0.3); transition: transform .15s, box-shadow .15s; }
-  .checkin-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(46, 139, 122, 0.38); }
-  .checkin-done { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 10px 22px; font-size: 15px; font-weight: 700; background: #EAF6EC; color: #2E9E5B; border: 1px solid #CBE8D2; }
+  /* ===== 签到页：暖琥珀 + 站点绿点缀 ===== */
+  .checkin-cal .section__title { color: #6B5320; letter-spacing: 0.06em; }
+
+  .checkin-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 2px 18px; }
+
+  /* 签到按钮：暖琥珀胶囊，带呼吸光泽 */
+  .checkin-btn { border: 0; border-radius: 999px; padding: 11px 28px; font-size: 15px; font-weight: 700; cursor: pointer; color: #FFFDF6; background: linear-gradient(120deg, #E4B45E 0%, #B98A2E 100%); box-shadow: 0 6px 18px rgba(185, 138, 46, 0.32), inset 0 1px 0 rgba(255, 252, 246, 0.4); letter-spacing: 0.04em; text-shadow: 0 1px 2px rgba(90, 60, 15, 0.32); position: relative; overflow: hidden; transition: transform .15s, box-shadow .15s, opacity .15s; }
+  .checkin-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(185, 138, 46, 0.42), inset 0 1px 0 rgba(255, 252, 246, 0.4); }
+  .checkin-btn:active { transform: translateY(0); }
+  .checkin-btn::after { content: ""; position: absolute; top: 0; left: -130%; width: 60%; height: 100%; background: linear-gradient(105deg, transparent 0%, rgba(255, 253, 246, 0.4) 50%, transparent 100%); animation: checkin-shine 3s ease-in-out infinite; }
+  .checkin-btn--loading { opacity: .62; pointer-events: none; }
+
+  /* 已签到徽章：深琥珀渐变 + 光泽扫过 */
+  .checkin-done { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 10px 22px; font-size: 15px; font-weight: 700; background: linear-gradient(120deg, #DCA64E 0%, #9C7326 100%); color: #FFFDF6; border: 0; box-shadow: 0 6px 18px rgba(185, 138, 46, 0.3), inset 0 1px 0 rgba(255, 252, 246, 0.4); letter-spacing: 0.04em; text-shadow: 0 1px 2px rgba(90, 60, 15, 0.34); position: relative; overflow: hidden; animation: checkin-done-in .35s cubic-bezier(.2,.9,.3,1.2); }
+  .checkin-done::after { content: ""; position: absolute; top: 0; left: -130%; width: 60%; height: 100%; background: linear-gradient(105deg, transparent 0%, rgba(255, 253, 246, 0.44) 50%, transparent 100%); animation: checkin-shine 2.8s ease-in-out infinite; }
+  @keyframes checkin-shine { 0% { left: -130%; } 55% { left: 130%; } 100% { left: 130%; } }
+  @keyframes checkin-done-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: scale(1); } }
+
   .checkin-top__stat { color: #8A7A55; font-size: 13px; }
-  .checkin-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
-  .checkin-weekday { text-align: center; font-size: 12px; color: #A99B78; padding: 4px 0; font-weight: 600; }
-  .checkin-cell { aspect-ratio: 1; border-radius: 10px; border: 1px solid #EFE6CE; background: #FFFDF8; color: #4C453A; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; }
-  .checkin-cell--checked { background: linear-gradient(135deg, #F7EFD2, #F0DFAE); border-color: #D9C277; color: #7A5C10; font-weight: 700; }
-  .checkin-cell--missed { background: #FBEFEF; border-color: #EACCCC; color: #B98A8A; }
-  .checkin-cell--future { background: #F6FAF8; border-color: #E9F1EE; color: #B9C8C2; }
-  .checkin-cell--today { box-shadow: 0 0 0 2px #2E8B7A; font-weight: 800; color: #1F6B5C; }
-  .checkin-cell .ck-mark { position: absolute; top: -1px; right: 3px; font-size: 11px; }
-  .checkin-empty { text-align: center; color: #9A8C6A; padding: 26px 0; font-size: 14px; }
+  .checkin-top__stat b { color: #8A6420; font-size: 14px; }
+
+  /* 用户信息条 */
+  .checkin-userinfo { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; background: rgba(255, 253, 246, 0.72); border: 1px solid #E4C084; border-radius: 999px; box-shadow: 0 2px 6px rgba(190, 140, 55, 0.14); }
+  .checkin-userinfo__avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid #FFFCF6; box-shadow: 0 1px 4px rgba(190, 140, 55, 0.25); }
+  .checkin-userinfo__name { font-size: 13px; font-weight: 700; color: #8A6420; }
+  .checkin-userinfo__meta { font-size: 12px; color: #9A8455; }
+  .checkin-userinfo__meta b { color: #6B5320; font-weight: 600; }
+  .checkin-userinfo__sep { color: #D5C8A8; }
+  html.theme--dark .checkin-userinfo { background: rgba(40, 35, 20, 0.7); border-color: #6B5520; }
+  html.theme--dark .checkin-userinfo__name { color: #E6CD88; }
+  html.theme--dark .checkin-userinfo__meta { color: #9A8455; }
+  html.theme--dark .checkin-userinfo__meta b { color: #E6CD88; }
+  html.theme--dark .checkin-userinfo__avatar { border-color: #2A2618; }
+
+  .checkin-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .checkin-weekday { text-align: center; font-size: 12px; color: #9A8C6A; padding: 5px 0; font-weight: 600; }
+  .checkin-cell { aspect-ratio: 1; border-radius: 11px; border: 1px solid #EFE7D4; background: #FFFCF6; color: #6B6356; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; position: relative; transition: transform .14s ease, box-shadow .14s ease; }
+  .checkin-cell:not(.checkin-cell--future):hover { transform: translateY(-2px); }
+  /* 已签到：暖琥珀渐变 + 内高光 + 柔投影（不用金属金，避免刺眼） */
+  .checkin-cell--checked { background: linear-gradient(150deg, #FFF4DC 0%, #FBDFAB 58%, #F0C989 100%); border-color: #E4C084; color: #8A6420; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 7px rgba(190, 140, 55, 0.2); }
+  .checkin-cell--checked:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 5px 12px rgba(190, 140, 55, 0.32); }
+  .checkin-cell--missed { background: #FBF1F1; border-color: #ECD5D5; color: #B59B9B; }
+  .checkin-cell--future { background: #FAF8F2; border-color: #F0EBDE; color: #C6BDA9; }
+  /* 今天：中性暖描边，不抢主色 */
+  .checkin-cell--today { box-shadow: 0 0 0 2px #E0B15A, 0 2px 7px rgba(190, 140, 55, 0.16); font-weight: 700; color: #6B5320; }
+  .checkin-cell--checked.checkin-cell--today { box-shadow: 0 0 0 2px #E0B15A, 0 3px 9px rgba(190, 140, 55, 0.3); color: #8A6420; }
+  .checkin-cell .ck-mark { position: absolute; top: 2px; right: 3px; font-size: 8px; color: #A9822E; font-weight: 900; line-height: 1; }
+  /* 今日签到动画 */
+  .checkin-cell--pop { animation: checkin-cell-pop .4s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes checkin-cell-pop { 0% { transform: scale(.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+  /* 图例 */
+  .checkin-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #9A8C6A; }
+  .checkin-legend__item { display: inline-flex; align-items: center; gap: 5px; }
+  .checkin-legend__sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #EFE6CE; display: inline-block; }
+  .sw--checked { background: linear-gradient(150deg, #FFF4DC, #F0C989); border-color: #E4C084; }
+  .sw--missed { background: #FBF1F1; border-color: #ECD5D5; }
+  .sw--future { background: #FAF8F2; border-color: #F0EBDE; }
+  .sw--today { background: #FFFCF6; box-shadow: 0 0 0 2px #E0B15A; }
+
+  /* 统计卡片 */
+  .checkin-stats { display: flex; flex-direction: column; gap: 12px; }
+  .checkin-stat { border-radius: 12px; border: 1px solid #EFE7D4; background: linear-gradient(150deg, #FFFCF6, #FDF4E4); box-shadow: 0 4px 14px rgba(190, 140, 55, 0.08); padding: 14px 16px; }
+  .checkin-stat__label { font-size: 12px; color: #8A7A55; margin-bottom: 6px; }
+  .checkin-stat__value { font-size: 28px; font-weight: 800; color: #8A6420; line-height: 1.1; letter-spacing: 0.02em; }
+  .checkin-stat__value small { font-size: 13px; font-weight: 600; color: #B0A482; margin-left: 3px; }
+  .checkin-stat--streak .checkin-stat__value { color: #B98A2E; }
+  .checkin-rules { font-size: 13px; line-height: 1.9; color: #5A5446; margin: 0; padding-left: 18px; }
+  .checkin-rules li { margin-bottom: 4px; }
+
+  /* 轻提示 */
+  .checkin-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: #2E2A22; color: #FFF9E8; border-radius: 10px; padding: 11px 22px; font-size: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.32); opacity: 0; transition: opacity .2s, transform .2s; z-index: 2147483002; pointer-events: none; }
+  .checkin-toast--show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== 暗色 ===== */
+  html.theme--dark .checkin-cal .section__title { color: #E6CD88; }
+  html.theme--dark .checkin-top__stat { color: #9a9a9c; }
+  html.theme--dark .checkin-top__stat b { color: #E6CD88; }
+  html.theme--dark .checkin-weekday { color: #6f6f71; }
+  html.theme--dark .checkin-cell { border-color: #363639; background: #1F1F21; color: #d8d8d8; }
+  html.theme--dark .checkin-cell--checked { background: linear-gradient(150deg, #3A3118 0%, #4A3D18 55%, #5A4820 100%); border-color: #6B5520; color: #F0DFAE; box-shadow: inset 0 1px 0 rgba(255, 224, 140, 0.16), 0 3px 9px rgba(0, 0, 0, 0.42); }
+  html.theme--dark .checkin-cell--missed { background: #2A2021; border-color: #4A3334; color: #9a8a8a; }
+  html.theme--dark .checkin-cell--future { background: #1b1b1c; border-color: #2e2e30; color: #6a6a6c; }
+  html.theme--dark .checkin-cell--today { color: #E0B15A; box-shadow: 0 0 0 2px #B98A2E, 0 3px 9px rgba(0,0,0,.3); }
+  html.theme--dark .checkin-cell--checked.checkin-cell--today { color: #F5D9A0; box-shadow: 0 0 0 2px #B98A2E, 0 3px 9px rgba(0,0,0,.4); }
+  html.theme--dark .checkin-cell .ck-mark { color: #F0DFAE; }
+  html.theme--dark .checkin-legend { color: #7d7d7f; }
+  html.theme--dark .checkin-legend__sw { border-color: #363639; }
+  html.theme--dark .sw--checked { background: linear-gradient(150deg, #3A3118, #5A4820); border-color: #6B5520; }
+  html.theme--dark .sw--missed { background: #2A2021; border-color: #4A3334; }
+  html.theme--dark .sw--future { background: #1b1b1c; border-color: #2e2e30; }
+  html.theme--dark .sw--today { background: #1F1F21; }
+  html.theme--dark .checkin-stat { border-color: #363639; background: linear-gradient(150deg, #232326, #262218); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+  html.theme--dark .checkin-stat__label { color: #9a9a9c; }
+  html.theme--dark .checkin-stat__value { color: #E6CD88; }
+  html.theme--dark .checkin-stat__value small { color: #7d7d7f; }
+  html.theme--dark .checkin-stat--streak .checkin-stat__value { color: #F0C75E; }
+  html.theme--dark .checkin-rules { color: #c8c8ca; }
 </style>
 <div class="row">
   <div class="medium-9 columns">
@@ -25,6 +108,13 @@
       </div>
       <div class="section__body">
         <div class="checkin-top">
+          {% if handler.user._id %}
+          <span class="checkin-userinfo">
+            <img class="checkin-userinfo__avatar" src="{{ handler.user.avatarUrl }}" alt="{{ handler.user.uname }}">
+            <span class="checkin-userinfo__name">{{ handler.user.uname }}</span>
+            <span class="checkin-userinfo__meta">UID <b>{{ handler.user._id }}</b>{% if handler.user.qq %}<span class="checkin-userinfo__sep">·</span>QQ <b>{{ handler.user.qq }}</b>{% endif %}</span>
+          </span>
+          {% endif %}
           {% if checked %}
             <span class="checkin-done">✅ 今日已签到</span>
           {% else %}
@@ -34,18 +124,37 @@
           <span class="checkin-top__stat">本月已签到 <b id="checkin-month-count">0</b> 天</span>
         </div>
         <div class="checkin-calendar" id="checkin-cal"></div>
-        <div class="typo supplementary" style="margin-top:14px;font-size:12px;">
-          ✅ 金色 = 已签到 ｜ 浅红 = 这天没签 ｜ 描边 = 今天
+        <div class="checkin-legend">
+          <span class="checkin-legend__item"><i class="checkin-legend__sw sw--checked"></i>已签到</span>
+          <span class="checkin-legend__item"><i class="checkin-legend__sw sw--today"></i>今天</span>
+          <span class="checkin-legend__item"><i class="checkin-legend__sw sw--missed"></i>这天没签</span>
+          <span class="checkin-legend__item"><i class="checkin-legend__sw sw--future"></i>未到达</span>
         </div>
       </div>
     </div>
   </div>
   <div class="medium-3 columns">
     <div class="section side">
-      <div class="section__header"><h1 class="section__title">规则</h1></div>
-      <div class="section__body typo supplementary">
-        <p>每天可签到一次，以当天 0 点为界。</p>
-        <p>记得每天上来打个卡，养成坚持学习的好习惯～</p>
+      <div class="section__header"><h1 class="section__title">统计</h1></div>
+      <div class="section__body">
+        <div class="checkin-stats">
+          <div class="checkin-stat checkin-stat--streak">
+            <div class="checkin-stat__label">🔥 连续签到</div>
+            <div class="checkin-stat__value"><span id="checkin-streak">0</span><small>天</small></div>
+          </div>
+          <div class="checkin-stat">
+            <div class="checkin-stat__label">本月</div>
+            <div class="checkin-stat__value"><span id="checkin-month-count-side">0</span><small>天</small></div>
+          </div>
+          <div class="checkin-stat">
+            <div class="checkin-stat__label">累计</div>
+            <div class="checkin-stat__value"><span id="checkin-total">0</span><small>天</small></div>
+          </div>
+        </div>
+        <ul class="checkin-rules" style="margin-top:16px;">
+          <li>每天可签到一次，以当天 0 点为界。</li>
+          <li>坚持打卡，养成好习惯～</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -72,29 +181,110 @@
     d.textContent = w;
     cal.appendChild(d);
   });
-  var monthCount = 0;
-  var todayKey = day;
-  for (var i = 0; i < lead; i++) {
-    var e = document.createElement('div'); e.className = 'checkin-cell checkin-cell--future'; e.textContent = ''; cal.appendChild(e);
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function renderCell() {
+    for (var i = 0; i < lead; i++) {
+      var e = document.createElement('div');
+      e.className = 'checkin-cell checkin-cell--future';
+      e.textContent = '';
+      cal.appendChild(e);
+    }
+    var todayKey = day;
+    for (var dnum = 1; dnum <= days; dnum++) {
+      var key = y + '-' + pad(m + 1) + '-' + pad(dnum);
+      var cell = document.createElement('div');
+      cell.className = 'checkin-cell';
+      cell.textContent = dnum;
+      cell.dataset.key = key;
+      if (key === todayKey) cell.classList.add('checkin-cell--today');
+      if (recordSet[key]) {
+        cell.classList.add('checkin-cell--checked');
+        var mark = document.createElement('span');
+        mark.className = 'ck-mark';
+        mark.textContent = '✓';
+        cell.appendChild(mark);
+      } else if (key < todayKey) {
+        cell.classList.add('checkin-cell--missed');
+      } else if (key > todayKey) {
+        cell.classList.add('checkin-cell--future');
+      }
+      cal.appendChild(cell);
+    }
   }
-  for (var dnum = 1; dnum <= days; dnum++) {
-    var key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(dnum).padStart(2, '0');
-    var cell = document.createElement('div');
-    cell.className = 'checkin-cell';
-    cell.textContent = dnum;
-    if (key === todayKey) cell.classList.add('checkin-cell--today');
-    if (recordSet[key]) { cell.classList.add('checkin-cell--checked'); var mark = document.createElement('span'); mark.className = 'ck-mark'; mark.textContent = '✓'; cell.appendChild(mark); monthCount++; }
-    else if (key < todayKey) cell.classList.add('checkin-cell--missed');
-    else if (key > todayKey) cell.classList.add('checkin-cell--future');
-    cal.appendChild(cell);
+
+  // 连续签到：从今天往前数（今天没签则从昨天起算）
+  function calcStreak() {
+    var streak = 0;
+    var cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!recordSet[day]) {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+    }
+    var guard = 0;
+    while (guard++ < 400) {
+      var key = cursor.getFullYear() + '-' + pad(cursor.getMonth() + 1) + '-' + pad(cursor.getDate());
+      if (recordSet[key]) {
+        streak++;
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
-  document.getElementById('checkin-month-count').textContent = monthCount;
+
+  function refreshStats() {
+    var monthCount = document.getElementById('checkin-month-count');
+    if (monthCount) monthCount.textContent = document.querySelectorAll('.checkin-cell--checked').length;
+    var side = document.getElementById('checkin-month-count-side');
+    if (side) side.textContent = document.querySelectorAll('.checkin-cell--checked').length;
+    var total = document.getElementById('checkin-total');
+    if (total) total.textContent = records.length;
+    var streak = document.getElementById('checkin-streak');
+    if (streak) streak.textContent = calcStreak();
+  }
+
+  renderCell();
+  refreshStats();
+
+  // 轻提示
+  var toast = document.createElement('div');
+  toast.className = 'checkin-toast';
+  document.body.appendChild(toast);
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('checkin-toast--show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('checkin-toast--show'); }, 3000);
+  }
+
   var btn = document.getElementById('checkin-btn');
   if (btn) {
     btn.addEventListener('click', function () {
+      btn.classList.add('checkin-btn--loading');
+      btn.textContent = '⏳ 签到中…';
       fetch('/checkin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          if (r.redirected) {
+            showToast('请先登录后再签到');
+            btn.classList.remove('checkin-btn--loading');
+            btn.textContent = '✋ 点击签到';
+            return null;
+          }
+          return r.text().then(function (t) {
+            try { return JSON.parse(t); }
+            catch (e) {
+              showToast('签到失败，请稍后再试');
+              btn.classList.remove('checkin-btn--loading');
+              btn.textContent = '✋ 点击签到';
+              return null;
+            }
+          });
+        })
         .then(function (res) {
+          if (!res) return;
           if (res && res.ok) {
             var wrap = btn.parentElement;
             btn.remove();
@@ -102,18 +292,30 @@
             done.className = 'checkin-done';
             done.textContent = '✅ 今日已签到';
             wrap.insertBefore(done, wrap.firstChild);
-            var cells = document.querySelectorAll('.checkin-cell--today');
-            cells.forEach(function (c) {
-              c.classList.remove('checkin-cell--missed');
-              c.classList.add('checkin-cell--checked');
-              var mm = document.createElement('span'); mm.className = 'ck-mark'; mm.textContent = '✓'; c.appendChild(mm);
-            });
-            var mc = document.getElementById('checkin-month-count');
-            mc.textContent = parseInt(mc.textContent, 10) + 1;
+            var todayCell = document.querySelector('.checkin-cell--today');
+            if (todayCell) {
+              todayCell.classList.remove('checkin-cell--missed');
+              todayCell.classList.add('checkin-cell--checked');
+              var mark = document.createElement('span');
+              mark.className = 'ck-mark';
+              mark.textContent = '✓';
+              todayCell.appendChild(mark);
+              todayCell.classList.add('checkin-cell--pop');
+            }
+            refreshStats();
             var cnt = document.getElementById('checkin-count');
-            cnt.innerHTML = cnt.innerHTML.replace(/<b>(\d+)<\/b>/, function (_, n) { return '<b>' + (parseInt(n, 10) + 1) + '</b>'; });
+            if (cnt) cnt.innerHTML = cnt.innerHTML.replace(/<b>(\d+)<\/b>/, function (_, n) { return '<b>' + (parseInt(n, 10) + 1) + '</b>'; });
+          } else {
+            showToast('签到失败，请稍后再试');
+            btn.classList.remove('checkin-btn--loading');
+            btn.textContent = '✋ 点击签到';
           }
-        }).catch(function () { });
+        })
+        .catch(function () {
+          showToast('网络异常，请重试');
+          btn.classList.remove('checkin-btn--loading');
+          btn.textContent = '✋ 点击签到';
+        });
     });
   }
 })();

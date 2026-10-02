@@ -6,7 +6,7 @@ import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
     OwnerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
-import avatar from '../lib/avatar';
+import avatar, { qqAvatar } from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -92,6 +92,7 @@ export class User {
 
         this.mail = udoc.mail;
         this.uname = udoc.uname;
+        this.avatar = udoc.avatar;
         this.hashType = udoc.hashType || 'hydro';
         this.priv = udoc.priv;
         this.regat = udoc.regat;
@@ -154,7 +155,7 @@ export class User {
 
     async private() {
         const user = await new User(this._udoc, this._dudoc, this.scope).init();
-        user.avatarUrl = avatar(user.avatar, 128);
+        user.avatarUrl = qqAvatar({ avatar: user.avatar, qq: (this._udoc as any).qq }, 128);
         if (user.pinnedDomains instanceof Array) {
             const result = await Promise.allSettled(user.pinnedDomains.slice(0, 10).map((i) => domain.get(i)));
             user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i)
@@ -170,15 +171,19 @@ export class User {
     }
 
     serialize(h?) {
+        const avatarUrl = qqAvatar({ avatar: this.avatar, qq: (this._udoc as any).qq }, 128);
         if (this._isPrivate) {
             const result: any = {};
             for (const key of Object.keys(this)) {
                 if (key.startsWith('_') && key !== '_id') continue;
                 result[key] = this[key];
             }
+            result.avatarUrl = avatarUrl;
             return result;
         }
-        return pick(this, this.getFields(h?.user?.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? 'private' : 'public'));
+        const result: any = pick(this, this.getFields(h?.user?.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? 'private' : 'public'));
+        result.avatarUrl = avatarUrl;
+        return result;
     }
 }
 

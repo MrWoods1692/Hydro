@@ -331,6 +331,7 @@ Domain {0} not found.: 域 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在建立後不能更改 ID。
 Domain ID: 域 ID
 Domain Settings: 域設定
+Domain Management: 域管理
 domain_dashboard: 管理域
 domain_discussion: 討論節點
 domain_edit: 編輯域資料

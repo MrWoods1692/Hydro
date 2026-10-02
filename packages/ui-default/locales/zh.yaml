@@ -1,4 +1,9 @@
 __langname: 简体中文
+'Search User': 搜索用户
+'No User': 没有用户
+'View Profile': 查看主页
+'Loading...': 加载中...
+'Clear': 清空
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
 '[Richtext message]': '[富文本消息]'
 '{0} comments': '{0} 条评论'
@@ -333,6 +338,7 @@ Domain {0} not found.: 域 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在创建后不能更改 ID。
 Domain ID: 域 ID
 Domain Settings: 域设置
+Domain Management: 域管理
 domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料

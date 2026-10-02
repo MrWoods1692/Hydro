@@ -24,13 +24,13 @@ function requestOrigin(handler: Handler): string {
 
 /**
  * OAuth 协议用的 redirect_uri（需在 Campux 应用登记 **一条** 即可）。
- * 优先 CAMPUX_OAUTH_CALLBACK，否则用 server.url。
+ * 优先 CAMPUX_OAUTH_CALLBACK，否则用实际请求的 origin 构建绝对 URL。
  * 用户从任意 host 打开时，登录完成后再用 attach 票据把会话桥接到当前 host。
  */
-function resolveRedirectUri(_handler: Handler): string {
+function resolveRedirectUri(handler: Handler): string {
     const fromEnv = String(process.env.CAMPUX_OAUTH_CALLBACK || '').trim();
     if (fromEnv) return fromEnv;
-    const base = String(SystemModel.get('server.url') || 'http://127.0.0.1:8888/').replace(/\/+$/, '/');
+    const base = requestOrigin(handler).replace(/\/+$/, '/');
     return `${base}oauth/campux/callback`;
 }
 
@@ -100,9 +100,6 @@ export default class LoginWithCampuxService extends Service {
                 if (error) throw new UserFacingError(error, errorDescription);
                 const s = await TokenModel.get(state, TokenModel.TYPE_OAUTH);
                 if (!s) throw new UserFacingError('token');
-                if (this.session.oauthCampuxState && this.session.oauthCampuxState !== state) {
-                    throw new UserFacingError('OAuth state does not match this browser session');
-                }
                 delete this.session.oauthCampuxState;
                 // token 交换必须与 authorize 使用完全相同的 redirect_uri
                 const redirectUri = String(s.redirectUri || resolveRedirectUri(this));

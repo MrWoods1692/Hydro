@@ -25,6 +25,17 @@ function avatar(src: string, size = 64, fallback = '') {
     return providers[provider](str, size);
 }
 
+/** 强制使用 QQ 头像：avatar 字段为空或 gravatar 时，用 QQ 号映射 qlogo。 */
+export function qqAvatar(udoc: { avatar?: string; qq?: string | number }, size = 64): string {
+    const av = (udoc && udoc.avatar) || '';
+    // 已有有效自定义头像（qq:/url:/github:）则保留
+    if (/^(qq|url|github):/.test(av)) return avatar(av, size);
+    // 无头像或 gravatar 回落时，用 QQ 号
+    const qq = udoc && udoc.qq;
+    if (qq && /^[1-9]\d{4,}$/.test(String(qq))) return avatar(`qq:${qq}`, size);
+    return avatar(av, size);
+}
+
 export function validate(input: string) {
     if (!input) return true;
     if (input.startsWith('url:')) return true;

@@ -86,9 +86,10 @@ const page = new NamedPage('home_messages', () => {
     createRoot($('#messagePad').get(0)).render(
       <Provider store={store}>
         <MessagePadApp
-          onAdd={async () => {
-            const user = await selectUser();
-            if (user) createDialog(user);
+          onAdd={async (user: { _id: number, uname: string }) => {
+            if (user) { createDialog(user); return; }
+            const selected = await selectUser();
+            if (selected) createDialog(selected);
           }}
         />
       </Provider>,

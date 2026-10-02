@@ -1,60 +1,61 @@
 // 页面级差异化装饰：每页独立配色/细节，不做成统一模板。
 // 作用域 = html[data-page=...]
 
-// ========== 题库页 · 青瓷知识库 ==========
+// ========== 题库页 · 简约灰白 =========
 html[data-page='problem_main']
   .search
-    border: 2px solid #BFE3D9
-    border-radius: 999px
-    box-shadow: 0 6px 20px rgba(#2E8B7A, 0.13)
-    background: #FFF
+    border: 1px solid #E8E6E2
+    border-radius: rem(10px)
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04)
+    background: #FAFAF8
     overflow: hidden
-    transition: border-color .2s, box-shadow .2s
+    transition: border-color 0.2s, box-shadow 0.2s
 
     &:focus-within
-      border-color: $primary-color
-      box-shadow: 0 8px 26px rgba(#2E8B7A, 0.2)
+      border-color: #C8C4BC
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08)
+      background: #FFFFFF
 
   .side .section__title::before
-    content: '✦ '
-    color: $secondary-color
+    content: ''
+    display: none
 
-  // 分类出现时轻微错落
+  // 分类列表
   .side .category
     li a
       border-radius: rem(6px)
       padding: rem(2px 8px)
-      transition: background .15s, color .15s
+      transition: background 0.15s, color 0.15s
 
       &:hover
-        background: #E7F3EF
-        color: #1F6B5C
+        background: #F0EFEB
+        color: #3A3A38
 
-// ========== 推荐框 · 缘分刷题（金=点缀 CTA 保留） ==========
+// ========== 推荐框 · 随机一题 =========
 html[data-page='problem_main'] [data-fragment-id='problem_lucky']
-  padding: rem(14px 16px 18px)
-  background: linear-gradient(140deg, #F0F8F5 0%, #FDF6DE 100%)
-  border: 1px solid #E3D9A8
-  border-radius: rem(14px)
+  padding: rem(20px 24px)
+  background: #FFFFFF
+  border: 1px solid #E8E6E2
+  border-radius: rem(12px)
   margin: rem(0 16px 16px)
-  box-shadow: 0 8px 24px rgba(#2E8B7A, 0.12)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06)
 
   .lucky-btn
     display: block
     text-align: center
-    background: linear-gradient(120deg, #C9A227 0%, #A87C2B 100%)
+    background: linear-gradient(135deg, #6A6560 0%, #3A3A38 100%)
     color: #FFF
-    border-radius: 999px
+    border-radius: rem(8px)
     padding: rem(10px 0)
     font-weight: 700
     letter-spacing: 0.06em
-    font-size: rem(15px)
-    box-shadow: 0 6px 16px rgba(#A87C2B, 0.35)
-    transition: transform .15s, box-shadow .15s
+    font-size: rem(14px)
+    box-shadow: 0 4px 12px rgba(58, 58, 56, 0.3)
+    transition: transform 0.15s, box-shadow 0.15s
 
     &:hover
       transform: translateY(-1px)
-      box-shadow: 0 10px 22px rgba(#A87C2B, 0.4)
+      box-shadow: 0 6px 18px rgba(58, 58, 56, 0.4)
       color: #FFF
       text-decoration: none
 
@@ -73,23 +74,23 @@ html[data-page='training_main']
       top: 0
       bottom: 0
       width: 4px
-      background: linear-gradient(180deg, #4EA8DE, #7DCBF5)
+      background: linear-gradient(180deg, #9A9690, #6A6560)
 
     &:hover
-      background: #F0F7FC
-      box-shadow: 0 8px 22px rgba(#4EA8DE, 0.15)
+      background: #FAFAF8
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1)
 
   .training__participants .numbox__num
-    color: #2E8B7A
+    color: #3A3A38
 
   .training__progress-bar
     height: rem(6px)
     border-radius: 999px
-    background: #E0EEF8
+    background: #E8E6E2
 
     .training__progress-track
       border-radius: 999px
-      background: linear-gradient(90deg, #7DCBF5, #4EA8DE)
+      background: linear-gradient(90deg, #C8C4BC, #9A9690)
 
   .training__title
     font-size: rem(17px)
@@ -100,7 +101,7 @@ html[data-page='contest_main']
   .section--contest.live, .section--contest.ready
     border-radius: rem(16px)
     border: 0
-    box-shadow: 0 14px 34px rgba(#7A3E99, 0.28)
+    box-shadow: 0 14px 34px rgba(#6A6560, 0.28)
     color: #FFF
     margin-bottom: rem(22px)
 
@@ -122,13 +123,13 @@ html[data-page='contest_main']
 
       &:hover
         background: #FFF
-        color: #7A3E99
+        color: #3A3A38
 
   .section--contest.live
-    background: linear-gradient(130deg, #9C2F5E 0%, #7A3E99 60%, #5B2E8F 100%)
+    background: linear-gradient(130deg, #6A6560 0%, #3A3A38 60%, #2A2A28 100%)
 
   .section--contest.ready
-    background: linear-gradient(130deg, #5B2E8F 0%, #7A3E99 100%)
+    background: linear-gradient(130deg, #3A3A38 0%, #6A6560 100%)
 
   // 列表项：按赛制着色的左边条
   .contest__item
@@ -139,7 +140,7 @@ html[data-page='contest_main']
 
     &:hover
       transform: translateX(3px)
-      box-shadow: 0 8px 20px rgba(#7A3E99, 0.14)
+      box-shadow: 0 8px 20px rgba(#6A6560, 0.14)
 
     &::before
       content: ''
@@ -151,16 +152,16 @@ html[data-page='contest_main']
       border-radius: 999px
 
   .contest-type--acm::before
-    background: #6BB67A
+    background: #6A6560
 
   .contest-type--oi::before
-    background: #E8B339
+    background: #9A9690
 
   .contest-type--ioi::before
-    background: #4A9FE8
+    background: #C8C4BC
 
   .contest__date .numbox__num
-    color: #8A3FA8
+    color: #3A3A38
 
 // ========== 作业页 · 暖橙 ==========
 html[data-page='homework_main']
@@ -177,14 +178,14 @@ html[data-page='homework_main']
       top: 0
       bottom: 0
       width: 4px
-      background: linear-gradient(180deg, #F2994A, #D9782A)
+      background: linear-gradient(180deg, #6A6560, #3A3A38)
 
     &:hover
-      background: #FFF8EE
-      box-shadow: 0 8px 20px rgba(#E08A2E, 0.16)
+      background: #FAFAF8
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1)
 
   .homework__date .numbox__num
-    color: #D9782A
+    color: #3A3A38
 
   .homework__title
     font-size: rem(17px)
@@ -194,12 +195,12 @@ html[data-page='discussion_main']
   .medium-9 .section__list__item
     border-radius: rem(12px)
     margin: rem(6px 10px)
-    border: 1px solid #DFEDE8
+    border: 1px solid #E8E6E2
     transition: border-color .2s, box-shadow .2s
 
     &:hover
-      border-color: #A8D8CB
-      box-shadow: 0 8px 20px rgba(#2E8B7A, 0.12)
+      border-color: #C8C4BC
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08)
 
   .medium-9 .section__title::before
     content: '💬 '
@@ -209,90 +210,390 @@ html[data-page='discussion_main']
     border-radius: rem(12px)
 
     .section__title
-      color: #2E8B7A
+      color: #3A3A38
 
     a
       transition: color .15s
 
       &:hover
-        color: #4EA8DE
+        color: #6A6560
 
-// ========== 排名页 · 深金领奖台 ==========
+// ========== 用户详情页 · 标签按钮 ==========
+html[data-page='user_detail']
+  .section__tab-container.immersive .section__tab-header-item.selected
+    background: #FFFFFF
+    box-shadow: none
+
+  .section__tab-container.immersive .section__tab-header-item.selected::after
+    background: transparent
+
+  .section__tab-container:not(.immersive) .section__tab-header-item.selected
+    border-top-color: transparent
+
+  .section__tab-container:not(.immersive) .section__tab-header-item.tab--active
+    border-top-color: transparent
+
+// ========== 排名页 · 浅色主题 ==========
 html[data-page='ranking']
-  .data-table
-    border-radius: rem(14px)
+  .section
+    border-radius: rem(12px)
     overflow: hidden
-    box-shadow: 0 10px 28px rgba(#8A6A12, 0.14)
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06)
+    background: #FFFFFF
+
+    .section__header
+      background: linear-gradient(180deg, #FFFFFF 0%, #FAFAF7 100%)
+      padding: rem(16px 24px)
+      border-bottom: 1px solid #EEEEEA
+
+      .section__title
+        color: #3A3A38
+        font-size: rem(18px)
+        font-weight: 700
+        letter-spacing: 0.01em
+        display: flex
+        align-items: center
+        gap: rem(8px)
+
+        .iconfont, svg
+          color: #6A6560
+          filter: none
+
+  .data-table.ranking-table
+    border-top: 0
+    border-radius: 0
+    box-shadow: none
+    background: #FFFFFF
 
     thead th
-      background: linear-gradient(120deg, #6B5310 0%, #8A6A12 55%, #B08D2C 100%)
-      color: #FFF7E0
-      border-bottom: 0
+      background: #F7F7F5
+      color: #8A8580
+      border-bottom: 1px solid #EEEEEA
       letter-spacing: 0.04em
+      font-size: rem(12px)
+      font-weight: 600
+      padding-top: rem(10px)
+      padding-bottom: rem(10px)
+      white-space: nowrap
+      text-transform: uppercase
+
+      &.col--rank, &.col--user, &.col--ac
+        text-align: center
 
     tbody tr
-      transition: background .15s
+      transition: background 0.2s ease, box-shadow 0.2s ease
+      border-bottom: 1px solid #F0EFEB
 
       &:hover
-        background: #FBF3DB
+        background: #FAFAF8
 
-    // 当前用户行（模板里无 class，靠首列渲染内容区分不了 —— 用淡紫描边强调）
-    tbody tr:first-child
-      background: linear-gradient(90deg, rgba(#C9B6E4, 0.22), transparent 70%)
+    tbody tr.rank-row--self
+      background: #F8F5FB
 
       .col--user
         font-weight: 700
+        color: #6B4FA3
 
-    .col--rank
+      td
+        box-shadow: inset 3px 0 0 #A98FE0
+
+    tbody .col--rank
+      text-align: center
       font-weight: 700
-      color: #8A6A12
+      color: #5A5A58
       white-space: nowrap
 
       .rank-medal
         display: inline-flex
         align-items: center
+        justify-content: center
         gap: rem(4px)
-        margin-right: rem(2px)
+        min-width: rem(36px)
+        padding: rem(3px 8px)
+        border-radius: rem(16px)
+        font-size: rem(14px)
 
       .rank-medal__icon
-        font-size: rem(18px)
+        font-size: rem(16px)
         line-height: 1
 
       .rank-num
         font-variant-numeric: tabular-nums
+        color: inherit
 
-  // 前三名：整行加粗 + 各自专属底色，从左向右淡出
+    tbody .rank-medal--1 .rank-medal
+      background: #F0EFEB
+      color: #3A3A38
+
+    tbody .rank-medal--2 .rank-medal
+      background: #F0F3F6
+      color: #4A5563
+
+    tbody .rank-medal--3 .rank-medal
+      background: #FDF0E6
+      color: #7A5230
+
+    tbody .rank-medal--1 .rank-num
+      color: #3A3A38
+
+    tbody .rank-medal--2 .rank-num
+      color: #4A5563
+
+    tbody .rank-medal--3 .rank-num
+      color: #7A5230
+
   tbody tr.rank-row--top
     td
-      font-weight: 700
+      font-weight: 600
 
     .col--rank
-      color: #6B5310
+      color: #3A3A38
 
   tbody tr.rank-row--1
-    background: linear-gradient(90deg, rgba(#F5D06F, 0.45), transparent 62%)
+    background: #F7F7F5
 
     &:hover
-      background: #FBE9B6
+      background: #F0EFEB
+
+    td
+      box-shadow: inset 3px 0 0 #C8C4BC
 
   tbody tr.rank-row--2
-    background: linear-gradient(90deg, rgba(#D6DCE4, 0.5), transparent 62%)
+    background: #FAFBFC
 
     &:hover
-      background: #EAF0F6
+      background: #F0F3F6
+
+    td
+      box-shadow: inset 3px 0 0 #B0BCC8
 
   tbody tr.rank-row--3
-    background: linear-gradient(90deg, rgba(#E8C39A, 0.45), transparent 62%)
+    background: #FDF9F4
 
     &:hover
-      background: #F7E6D2
+      background: #F8EFE6
 
-  // 前三名名次数字：金 / 银 / 铜
-  tbody .rank-medal--1 .rank-num
-    color: #A87C2B
+    td
+      box-shadow: inset 3px 0 0 #D89B6A
 
-  tbody .rank-medal--2 .rank-num
-    color: #6E7A8C
+  // 分页器
+  .section__body .paginator
+    padding: rem(12px 16px)
+    background: #FAFAF8
+    border-top: 1px solid #EEEEEA
 
-  tbody .rank-medal--3 .rank-num
-    color: #B07A45
+    .menu__item .menu__link
+      color: #6A6560
+      font-weight: 600
+      transition: color 0.15s, background 0.15s
+
+      &:hover
+        color: #3A3A38
+        background: #F0EFEA
+
+    .menu__item.active .menu__link
+      background: #F0EFEB
+      color: #3A3A38
+      border-radius: rem(6px)
+
+// ========== 排名页 · 暗色主题 ==========
+html[data-page='ranking'].theme--dark
+  .section
+    background: #1A1A1C
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4)
+
+    .section__header
+      background: linear-gradient(180deg, #1F1F21 0%, #1A1A1C 100%)
+      border-bottom-color: #2A2A2A
+
+      .section__title
+        color: #E8E4DC
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5)
+
+        .iconfont, svg
+          color: #9A9690
+
+  .data-table.ranking-table
+    background: #1A1A1C
+
+    thead th
+      background: #222224
+      color: #9A9690
+      border-bottom-color: #2A2A2A
+
+    tbody tr
+      background-color: #1A1A1C !important
+      border-top-color: #242426
+      border-bottom-color: #242426
+
+      &:nth-child(even)
+        background-color: #161618 !important
+
+      &:hover
+        background: #222225
+
+    tbody tr.rank-row--self
+      background: #221F28
+
+      td
+        box-shadow: inset 3px 0 0 #A98FE0
+
+    tbody .col--rank
+      color: #E8E4DC
+
+    tbody .rank-medal--1 .rank-medal
+      background: #2A2A2D
+      color: #E8E4DC
+
+    tbody .rank-medal--2 .rank-medal
+      background: #25282C
+      color: #C4CBD6
+
+    tbody .rank-medal--3 .rank-medal
+      background: #2A2A2D
+      color: #D0CCC4
+
+    tbody .rank-medal--1 .rank-num
+      color: #E8E4DC
+
+    tbody .rank-medal--2 .rank-num
+      color: #C4CBD6
+
+    tbody .rank-medal--3 .rank-num
+      color: #D0CCC4
+
+  tbody tr.rank-row--top .col--rank
+    color: #E8E4DC
+
+  tbody tr.rank-row--1
+    background: rgba(232, 228, 220, 0.04)
+
+    &:hover
+      background: rgba(232, 228, 220, 0.08)
+
+    td
+      box-shadow: inset 3px 0 0 #6A6560
+
+  tbody tr.rank-row--2
+    background: rgba(196, 203, 214, 0.05)
+
+    &:hover
+      background: rgba(196, 203, 214, 0.1)
+
+    td
+      box-shadow: inset 3px 0 0 #AEB9C6
+
+  tbody tr.rank-row--3
+    background: rgba(208, 204, 196, 0.05)
+
+    &:hover
+      background: rgba(208, 204, 196, 0.1)
+
+    td
+      box-shadow: inset 3px 0 0 #C8C4BC
+
+  .section__body .paginator
+    background: #1A1A1C
+    border-top-color: #242426
+
+    .menu__item .menu__link
+      color: #9A9690
+
+      &:hover
+        color: #E8E4DC
+        background: #222225
+
+    .menu__item.active .menu__link
+      background: #2A2A2D
+      color: #E8E4DC
+
+// ========== 页脚 · 暗色主题 ==========
+// footer.page.styl 全是亮色白卡，这里整体翻成深底，呼应全站暗色。
+html.theme--dark
+  .footer__card
+    background: #232326
+    border-color: #363639
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45)
+
+    +mobile()
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4)
+
+  .footer__brand
+    border-bottom-color: #363639
+
+  .footer__brand-badge
+    background: #2c2c2f
+    box-shadow: 0 0 0 3px #3a3a3d
+
+  .footer__brand-text
+    h1
+      color: #5FB89E
+
+    p
+      color: #9a9a9c
+
+  .footer__brand-online
+    background: rgba(#35B37E, 0.14) !important
+
+    &:hover
+      background: rgba(#35B37E, 0.24) !important
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4)
+
+  // 徽章本身是 <p>，base 的 .footer__brand-text p (0,2,0) 会赢过 .footer__brand-online (0,1,0)，
+  // 所以这里补一条同特异性的规则把徽章文字重新染回绿。
+  .footer__brand-text .footer__brand-online
+    color: #5FB89E !important
+
+  .footer__category
+    h1
+      color: #5FB89E
+
+  // base 的 a,.link,... 在暗色下的链接色对页脚不合适；这里统一用 !important 锁定，
+  // 避免和加载顺序 / 重复样式表产生难缠的级联竞争。
+  .footer__card a
+    color: #b8b8ba !important
+    transition: color .2s
+
+    &:hover
+      color: #5FB89E !important
+      text-decoration: underline
+      text-underline-offset: 3px
+
+  .footer__extra-link
+    border-top-color: #363639
+
+  .footer__extra-link-item
+    color: #b8b8ba
+
+  .layout--immersive
+    .footer
+      background: none
+
+// ========== 随机一题（缘分刷题）· 暗色主题 ==========
+html[data-page='problem_main'].theme--dark [data-fragment-id='problem_lucky']
+  background: linear-gradient(140deg, #23272B 0%, #2A2A22 100%)
+  border-color: #4A4633
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)
+
+  .lucky-btn
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45)
+
+// ========== 顶部导航栏 · 统一灰白（全局） ==========
+.nav
+  .nav__item.nav--active
+    border-color: #3A3A38 !important
+    color: #3A3A38 !important
+
+  .nav__item:hover
+    border-color: #C8C4BC !important
+    background: #FAFAF8 !important
+    color: #3A3A38 !important
+
+  .nav__item--round
+    border-color: #3A3A38 !important
+    color: #FFFFFF !important
+    background: #3A3A38 !important
+
+    &:hover
+      background: #2A2A28 !important
+      color: #FFFFFF !important

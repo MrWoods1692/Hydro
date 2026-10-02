@@ -5,23 +5,26 @@
 <div class="row">
   <div class="medium-12 columns">
     <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">🏆 {{ _('Rank') }}</h1>
+      </div>
       <div class="section__body no-padding">
         <div data-fragment-id="ranking">
           {% if not udocs.length %}
           {{ nothing.render('Sorry, there are no users in this domain.') }}
           {% else %}
-          <table class="data-table">
+          <table class="data-table ranking-table">
             <colgroup>
-              <col class="col--rank">
-              <col class="col--user">
-              <col class="col--rp">
+              <col class="col--rank" style="width:9%">
+              <col class="col--user" style="width:22%">
+              <col class="col--rp" style="width:11%">
               {% for key, def in model.rp %}
                 {% if not def.hidden %}
-                  <col class="col--detail rp-{{ key }}">
+                  <col class="col--detail rp-{{ key }}" style="width:10%">
                 {% endif %}
               {% endfor %}
-              <col class="col--ac">
-              <col class="col--bio">
+              <col class="col--ac" style="width:11%">
+              <col class="col--bio" style="width:37%">
             </colgroup>
             <thead>
               <tr>
@@ -39,7 +42,7 @@
             </thead>
             <tbody>
               {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-              <tr>
+              <tr class="rank-row--self">
                 <td class="col--rank">{{ handler.user.rank|default('-') }}</td>
                 <td class="col--user">{{ user.render_inline(handler.user) }}</td>
                 <td class="col--rp">{{ handler.user.rp|default(0)|round(0) }}</td>

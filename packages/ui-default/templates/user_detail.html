@@ -7,6 +7,126 @@
   .user-profile-bg {
     background-image: url("{{ udoc.backgroundImage }}"), url("/components/profile/backgrounds/1.jpg");
   }
+  /* ===== 个人资料横幅 ===== */
+  .profile-header {
+    background: linear-gradient(120deg, #F7F7F5 0%, #F0EFEB 45%, #E8E6E2 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .user-profile-bg.profile-header { background-image: url("{{ udoc.backgroundImage }}"), linear-gradient(120deg, #F7F7F5 0%, #F0EFEB 45%, #E8E6E2 100%); background-size: cover, cover; }
+  /* 顶部装饰条 */
+  .profile-header::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #D4D0C8 0%, #C8C4BC 60%, #BCB8B0 100%); z-index: 2; }
+  /* 蒙版层 */
+  .profile-header::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(120deg, rgba(247,247,245,0.93) 0%, rgba(240,239,235,0.82) 42%, rgba(232,230,226,0.74) 100%); z-index: 1; }
+  .profile-header__content { position: relative; z-index: 2; }
+  .media__left .user-profile-avatar {
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    object-fit: cover; display: block; background: #fff;
+  }
+  /* 内容层 */
+  .profile-header__main h1 { margin: 0 0 6px; font-size: 23px; color: #2A2A28 !important; letter-spacing: 0.02em; line-height: 40px; }
+  .profile-header__main h1 small { font-size: 14px; font-weight: 500; color: #6A6560 !important; margin-left: 6px; }
+  .profile-header__main p { font-size: 13px; color: #6A6560 !important; line-height: 30px; margin: 0 0 12px; }
+  .profile-header__main p b { color: #3A3A38 !important; font-weight: 600; }
+  .profile-rank-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255, 255, 255, 0.75); border: 1px solid #D4D0C8;
+    border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 700;
+    color: #3A3A38 !important; box-shadow: 0 3px 9px rgba(0, 0, 0, 0.08);
+  }
+  .profile-rank-pill .gold { color: #3A3A38; font-weight: 800; }
+  .profile-header__contact-bar { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; color: #6A6560 !important; text-align: left; }
+  .profile-header__contact-item {
+    width: 34px; height: 34px; border-radius: 10px; margin-left: 0; margin-right: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(212, 208, 200, 0.65);
+    color: #6A6560 !important; font-size: 16px; line-height: 1; vertical-align: top;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+  }
+  .profile-header__contact-item:hover { transform: translateY(-2px); background: #FFFFFF; color: #3A3A38 !important; box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12); }
+  .profile-header__contact-item .icon { color: inherit; font-size: 16px; line-height: 1; display: block; }
+
+  /* 徽章 */
+  .profile-header__contact-item.user-profile-badge {
+    width: auto; padding: 0 11px; gap: 5px;
+    font-weight: 800; font-size: 11px; letter-spacing: 0.05em;
+    display: inline-flex; align-items: center;
+  }
+  .profile-header__contact-item.user-profile-badge .icon { font-size: 13px; }
+  .profile-header__contact-item.user-profile-badge.badge--su {
+    background: linear-gradient(135deg, #6A6560 0%, #3A3A38 100%) !important;
+    border-color: #2A2A28 !important; color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  }
+  .profile-header__contact-item.user-profile-badge.badge--mod {
+    background: linear-gradient(135deg, #7CB342 0%, #4A8A2E 100%) !important;
+    border-color: #3D7026 !important; color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(74, 138, 46, 0.35) !important;
+  }
+  .profile-header__contact-item.user-profile-badge svg { flex: none; }
+
+  /* ===== 标签页 ===== */
+  .section__tab-container.immersive .section__tab-item {
+    border-radius: 10px 10px 0 0 !important;
+    transition: background .2s ease !important;
+  }
+  .section__tab-container.immersive .section__tab-item .section__tab-title {
+    padding: 0 18px !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+    transition: color .2s ease !important;
+  }
+  .section__tab-container.immersive .section__tab-item:hover .section__tab-title {
+    color: #FFF !important;
+  }
+  .section__tab-container.immersive .section__tab-item.selected {
+    background: #FFFFFF !important;
+  }
+  .section__tab-container.immersive .section__tab-item.selected .section__tab-title {
+    color: #3A3A38 !important;
+    font-weight: 600;
+  }
+
+  /* ===== 侧栏统计卡片 ===== */
+  .sidebar-user-stat { display: flex; flex-direction: column; gap: 12px; }
+  .sidebar-user-stat .balancer__body { display: block; padding: 0; }
+  .numbox {
+    border-radius: 12px; border: 1px solid #E8E6E2;
+    background: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    padding: 14px 16px; text-align: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .numbox:hover { transform: translateY(-2px); box-shadow: 0 7px 18px rgba(0, 0, 0, 0.1); }
+  .numbox__num { font-size: 26px; font-weight: 800; color: #3A3A38; line-height: 1.1; letter-spacing: 0.01em; }
+  .numbox__text { font-size: 12px; color: #9A9690; margin-top: 4px; }
+
+  /* ===== 标签列表 ===== */
+  .taglist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 13px; margin: 0; }
+  .taglist .t { display: flex; justify-content: space-between; color: #3A3A38; padding: 5px 0; border-bottom: 1px dashed #E8E6E2; }
+  .taglist .t .n { color: #3A3A38; font-weight: 700; }
+
+  /* ===== 暗色主题 ===== */
+  html.theme--dark .profile-header { background: linear-gradient(120deg, #232326 0%, #2A2A2D 45%, #303033 100%) !important; }
+  html.theme--dark .profile-header::after { background: linear-gradient(120deg, rgba(35,35,38,0.93) 0%, rgba(42,42,45,0.82) 42%, rgba(48,48,51,0.74) 100%) !important; }
+  html.theme--dark .profile-header__main h1 { color: #E8E6E2 !important; }
+  html.theme--dark .profile-header__main h1 small { color: #9A9690 !important; }
+  html.theme--dark .profile-header__main p { color: #B0ACA6 !important; }
+  html.theme--dark .profile-header__main p b { color: #E8E6E2 !important; }
+  html.theme--dark .profile-rank-pill { background: rgba(30, 30, 33, 0.7) !important; border-color: #4A4A4D !important; color: #E8E6E2 !important; box-shadow: 0 3px 9px rgba(0, 0, 0, 0.3); }
+  html.theme--dark .profile-rank-pill .gold { color: #E8E6E2 !important; }
+  html.theme--dark .profile-header__contact-item { background: rgba(30, 30, 33, 0.6) !important; border-color: #4A4A4D !important; color: #B0ACA6 !important; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
+  html.theme--dark .profile-header__contact-item:hover { background: rgba(50, 50, 53, 0.85) !important; color: #E8E6E2 !important; box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4); }
+  html.theme--dark .profile-header__contact-item.user-profile-badge.badge--su { background: linear-gradient(135deg, #5A5A5D 0%, #3A3A3D 100%) !important; border-color: #4A4A4D !important; color: #FFFFFF !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important; }
+  html.theme--dark .profile-header__contact-item.user-profile-badge.badge--mod { background: linear-gradient(135deg, #8AAA72 0%, #4A6B3A 100%) !important; border-color: #6B8E5A !important; color: #FFFFFF !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important; }
+  html.theme--dark .media__left .user-profile-avatar { border-color: rgba(30, 30, 33, 0.92) !important; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2) !important; }
+  html.theme--dark .numbox { border-color: #363639; background: #1E1E20; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); }
+  html.theme--dark .numbox__num { color: #E8E6E2; }
+  html.theme--dark .numbox__text { color: #9A9690; }
+  html.theme--dark .taglist .t { color: #C8C8CA; border-bottom-color: #363639; }
+  html.theme--dark .taglist .t .n { color: #E8E6E2; }
 </style>
 <div class="row">
   <div class="medium-9 columns">
@@ -23,16 +143,18 @@
                 {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
               </h1>
               <p>
-                {{ _('UID') }}: {{ udoc['_id'] }},
-                {{ _('Registered at') }} {{ datetimeSpan(udoc['firstLogin'] or udoc['regat'])|safe }},
-                {{ _('last login at') }} {{ datetimeSpan(udoc['loginat'])|safe }},
+                <b>{{ _('UID') }}</b> {{ udoc['_id'] }} <span style="color:#D5C8A8;margin:0 5px;">·</span>
+                {{ _('Registered at') }} {{ datetimeSpan(udoc['firstLogin'] or udoc['regat'])|safe }} <span style="color:#D5C8A8;margin:0 5px;">·</span>
+                {{ _('last login at') }} {{ datetimeSpan(udoc['loginat'])|safe }}
               {% if sdoc and sdoc.updateAt %}
-                {{ _('last active at') }} {{ datetimeSpan(sdoc['updateAt'])|safe if Date.now() - sdoc.updateAt.getTime() > 300000 else _('just now') }}.
+                <span style="color:#D5C8A8;margin:0 5px;">·</span>
+                {{ _('last active at') }} {{ datetimeSpan(sdoc['updateAt'])|safe if Date.now() - sdoc.updateAt.getTime() > 300000 else _('just now') }}
               {% else %}
-                {{ _('currently offline') }}.
+                <span style="color:#D5C8A8;margin:0 5px;">·</span>
+                {{ _('currently offline') }}
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</p>
+              <span class="profile-rank-pill">🏆 {{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</span>
               {% if udoc._id != 1 and not udoc.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                 <p>{{ _('This user was banned.') }}</p>
               {% endif %}
@@ -68,6 +190,7 @@
                   class="profile-header__contact-item user-profile-badge badge--su"
                   data-tooltip="{{ _('{0} is a superuser.').format(_('She' if udoc.gender == 1 else 'He')) }}"
                 >
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M12 1.5l9 3.5v6c0 5.5-3.8 10.3-9 11.5-5.2-1.2-9-6-9-11.5V5l9-3.5zm0 2.3L5 6.4V11c0 4.5 3 8.6 7 9.6 4-1 7-5.1 7-9.6V6.4L12 3.8z"/></svg>
                   SU
                 </span>
               {% elif udoc.hasPerm(perm.PERM_MOD_BADGE) %}
@@ -75,6 +198,7 @@
                   class="profile-header__contact-item user-profile-badge badge--mod"
                   data-tooltip="{{ _('{0} is a moderator of this domain.').format(_('She' if udoc.gender == 1 else 'He')) }}"
                 >
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M12 1.5l9 3.5v6c0 5.5-3.8 10.3-9 11.5-5.2-1.2-9-6-9-11.5V5l9-3.5zm0 2.3L5 6.4V11c0 4.5 3 8.6 7 9.6 4-1 7-5.1 7-9.6V6.4L12 3.8z"/></svg>
                   MOD
                 </span>
               {% endif %}

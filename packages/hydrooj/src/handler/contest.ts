@@ -432,7 +432,7 @@ export class ContestEditHandler extends Handler {
         }
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
-        const beginAt = moment(this.tdoc?.beginAt || new Date(ts)).tz(this.user.timeZone);
+        const beginAt = moment(this.tdoc?.beginAt || new Date(ts)).tz(this.user.timeZone || moment.tz.guess(true));
         this.response.body = {
             rules,
             tdoc: this.tdoc,

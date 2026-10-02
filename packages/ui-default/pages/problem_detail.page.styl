@@ -1,23 +1,162 @@
 .page--problem_detail,
 .page--contest_detail_problem,
 .page--homework_detail_problem
-  .section__tab-header
-    padding-top: 0;
-  
-  .section__tab-container  + .section__body
-    padding-top: 0
-  
-  .section__tab-header-item
-    border-top: 3px solid transparent;
-    transition: border-color 0.2s, background 0.2s, color 0.2s;
-    transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-    margin-right: 0;
-    color: #182026 !important;
-    text-decoration: none;
+  // ===== 标题区 =====
+  .section__header
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAFAF7 100%)
+    padding: rem(18px 24px)
+    border-bottom: 1px solid #EEEEEA
+
+    .section__title
+      color: #3A3A38
+      font-size: rem(20px)
+      font-weight: 700
+      letter-spacing: 0.01em
+
+  .section__body
+    background: #FFFFFF
+
+  // ===== 题目标签 =====
+  .problem__tags
+    margin: 0
+    padding: 0
+    list-style: none
+    display: flex
+    flex-wrap: wrap
+    gap: rem(6px 8px)
+
+  .problem__tag-item
+    display: inline-flex
+    align-items: center
+    gap: rem(4px)
+    padding: rem(3px 10px)
+    background: #F7F7F5
+    border: 1px solid #E8E6E2
+    border-radius: rem(6px)
+    font-size: rem(12px)
+    color: #6A6560
+    font-weight: 500
+    text-decoration: none
 
     &:hover
-      border-color: #5f9fd6;
-      background: #f8f8f8;
-    
+      background: #F0EFEB
+      color: #3A3A38
+      border-color: #C8C4BC
+      text-decoration: none
+
+  // ===== 内容区 =====
+  .problem-content-container
+    background: #FFFFFF
+
+  .problem-content
+    color: #3A3A38
+    line-height: 1.7
+
+  // ===== 标签页（多语言切换） =====
+  .section__tab-header
+    padding-top: 0
+
+  .section__tab-container + .section__body
+    padding-top: 0
+
+  .section__tab-header-item
+    border-top: 3px solid transparent
+    transition: border-color 0.2s, background 0.2s, color 0.2s
+    transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1)
+    margin-right: 0
+    color: #6A6560 !important
+    text-decoration: none
+
+    &:hover
+      border-color: #C8C4BC
+      background: #FAFAF8
+      color: #3A3A38 !important
+
     &.tab--active
-      border-color: #ed5f82;
+      border-color: #3A3A38 !important
+      color: #3A3A38 !important
+      font-weight: 600
+
+  // ===== 侧栏菜单 =====
+  .section--problem-sidebar
+    background: #FAFAF8
+    border: 1px solid #E8E6E2
+    border-radius: rem(10px)
+    overflow: hidden
+
+    .menu
+      padding: rem(6px 0)
+
+    .menu__item
+      border-radius: 0
+
+      .menu__link
+        padding: rem(9px 20px)
+        color: #3A3A38
+        font-weight: 500
+        border-radius: 0
+
+        .icon
+          color: #9A9690
+
+        &:hover
+          background: #F0EFEB
+          color: #3A3A38
+
+          .icon
+            color: #3A3A38
+
+        &.active
+          background: #FFFFFF
+          color: #3A3A38
+          font-weight: 600
+          box-shadow: inset 3px 0 0 #6A6560
+
+          .icon
+            color: #3A3A38
+
+        &.highlight
+          color: #3A3A38
+
+    .menu__seperator
+      background: #E8E6E2
+
+  // ===== 侧栏信息/相关区块 =====
+  .side .section
+    background: #FAFAF8
+    border: 1px solid #E8E6E2
+    border-radius: rem(10px)
+    overflow: hidden
+
+    .section__header
+      background: #FFFFFF
+      border-bottom: 1px solid #EEEEEA
+
+      .section__title
+        color: #3A3A38
+        font-size: rem(15px)
+        font-weight: 700
+
+    .section__body
+      color: #3A3A38
+
+  // ===== 比赛问题跳转（A/B/C...） =====
+  .contest-problems
+    gap: rem(6px)
+
+    a
+      background: #F7F7F5
+      border: 1px solid #E8E6E2
+      color: #6A6560
+      border-radius: rem(6px)
+
+      &.active
+        background: #3A3A38
+        border-color: #2A2A28
+        color: #FFFFFF
+
+      &.pass
+        color: #3A3A38
+
+      &.fail
+        color: #3A3A38

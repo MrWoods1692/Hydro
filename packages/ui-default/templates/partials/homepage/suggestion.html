@@ -1,34 +1,85 @@
-<div class="section side">
+{% set page_name = "homepage" %}
+<div class="section side homepage-rec">
+  <style>
+    /* ===== 推荐区块：卡片式分组 + 胶囊链接 ===== */
+    .homepage-rec .section__header { margin-bottom: 0.9rem; }
+    .homepage-rec .section__title { font-size: 1.05rem; letter-spacing: 0.04em; color: #4A3510; font-weight: 700; }
+
+    .homepage-rec .rec-groups { display: flex; flex-direction: column; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+
+    .rec-group { border: 1px solid #E8DCC4; border-radius: 14px; background: linear-gradient(155deg, #FFFDF8 0%, #F8EFDD 100%); padding: 0.85rem 1rem 0.95rem; box-shadow: 0 2px 8px rgba(180, 140, 70, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6); transition: transform .18s ease, box-shadow .18s ease; }
+    .rec-group:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(180, 140, 70, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7); }
+
+    .rec-group__head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.7rem; padding-bottom: 0.55rem; border-bottom: 1px dashed #E4D2B0; }
+    .rec-group__icon { width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; color: #fff; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .rec-group--cn .rec-group__icon { background: linear-gradient(135deg, #E4634E, #C94531); }
+    .rec-group--en .rec-group__icon { background: linear-gradient(135deg, #4A90E2, #2E6BC0); }
+    .rec-group--tools .rec-group__icon { background: linear-gradient(135deg, #6BA368, #4A8A4E); }
+    .rec-group__name { font-size: 0.95rem; font-weight: 700; color: #5C4720; letter-spacing: 0.03em; }
+    .rec-group--cn .rec-group__name { color: #9A3B2C; }
+    .rec-group--en .rec-group__name { color: #2A5C9A; }
+    .rec-group--tools .rec-group__name { color: #3E6E3E; }
+
+    .rec-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }
+    .rec-chip { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.32rem 0.68rem 0.32rem 0.42rem; border-radius: 999px; background: #FFFDF8; border: 1px solid #E4D2B0; font-size: 0.82rem; font-weight: 500; color: #6B5320; text-decoration: none; transition: all .16s ease; white-space: nowrap; }
+    .rec-chip:hover { border-color: #C99A4A; background: #FFF8EB; color: #8A6420; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(180, 140, 70, 0.14); }
+    .rec-chip__abbr { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; color: #fff; letter-spacing: 0; }
+    .rec-chip__arrow { font-size: 0.85rem; opacity: 0.45; transition: opacity .16s, transform .16s; }
+    .rec-chip:hover .rec-chip__arrow { opacity: 1; transform: translateX(2px); }
+
+    /* 深色模式 */
+    html.theme--dark .homepage-rec .section__title { color: #E6CD88; }
+    html.theme--dark .rec-group { background: linear-gradient(155deg, #2A2518 0%, #211D12 100%); border-color: #4A3D20; box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03); }
+    html.theme--dark .rec-group:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); }
+    html.theme--dark .rec-group__head { border-bottom-color: #3A3018; }
+    html.theme--dark .rec-group--cn .rec-group__name { color: #E89080; }
+    html.theme--dark .rec-group--en .rec-group__name { color: #80B0E8; }
+    html.theme--dark .rec-group--tools .rec-group__name { color: #8CC88C; }
+    html.theme--dark .rec-chip { background: #1F1B12; border-color: #3A3018; color: #C8B080; }
+    html.theme--dark .rec-chip:hover { background: #2A2214; border-color: #6B5520; color: #E6CD88; }
+  </style>
+
   <div class="section__header">
-    <h1 class="section__title">{{ _('Recommended') }}</h1>
+    <h1 class="section__title">🔗 {{ _('Recommended') }}</h1>
   </div>
-  <div class="section__body"><ul class="group-list">
-    <li class="group-list__item">
-      <h2 class="section__title">{{ _('Chinese') }}</h2>
-      <ol class="chip-list">
-        <li class="chip-list__item"><a class="typo-a" href="https://loj.ac/" target="_blank">LibreOJ</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://www.luogu.com.cn/" target="_blank">洛谷</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://uoj.ac/" target="_blank">UOJ</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://www.cometoj.com/" target="_blank">CometOJ</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://vijos.org/" target="_blank">Vijos</a></li>
-      </ol>
-    </li>
-    <li class="group-list__item">
-      <h2 class="section__title">{{ _('English') }}</h2>
-      <ol class="chip-list">
-        <li class="chip-list__item"><a class="typo-a" href="https://codeforces.com/" target="_blank">Codeforces</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://atcoder.jp/" target="_blank">AtCoder</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://www.codechef.com/" target="_blank">CodeChef</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://www.spoj.com/" target="_blank">SPOJ</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://www.topcoder.com/" target="_blank">TopCoder</a></li>
-        <li class="chip-list__item"><a class="typo-a" href="https://onlinejudge.org/" target="_blank">OnlineJudge</a></li>
-      </ol>
-    </li>
-    <li class="group-list__item">
-      <h2 class="section__title">{{ _('Tools') }}</h2>
-      <ol class="chip-list">
-        <li class="chip-list__item"><a class="typo-a" href="https://oier.baoshuo.dev/" target="_blank">OIerDb</a></li>
-      </ol>
-    </li>
-  </ul></div>
+  <div class="section__body">
+    <ul class="rec-groups">
+      <li class="rec-group rec-group--cn">
+        <div class="rec-group__head">
+          <span class="rec-group__icon">中</span>
+          <span class="rec-group__name">{{ _('Chinese') }}</span>
+        </div>
+        <ul class="rec-chips">
+          <li><a class="rec-chip" href="https://loj.ac/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#4A9EFF,#2A6BC8)">L</span>LibreOJ<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://www.luogu.com.cn/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#0EA5E9,#0284C7)">L</span>洛谷<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://uoj.ac/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#F59E0B,#D97706)">U</span>UOJ<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://www.cometoj.com/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)">C</span>CometOJ<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://vijos.org/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#EF4444,#DC2626)">V</span>Vijos<span class="rec-chip__arrow">↗</span></a></li>
+        </ul>
+      </li>
+      <li class="rec-group rec-group--en">
+        <div class="rec-group__head">
+          <span class="rec-group__icon">EN</span>
+          <span class="rec-group__name">{{ _('English') }}</span>
+        </div>
+        <ul class="rec-chips">
+          <li><a class="rec-chip" href="https://codeforces.com/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#FFD86C,#F2A900)">CF</span>Codeforces<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://atcoder.jp/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#C0392B,#922B21)">AC</span>AtCoder<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://www.codechef.com/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#5FB360,#3E8E41)">CC</span>CodeChef<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://www.spoj.com/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#4A90E2,#2A5CB0)">S</span>SPOJ<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://www.topcoder.com/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#A855F7,#7C3AED)">TC</span>TopCoder<span class="rec-chip__arrow">↗</span></a></li>
+          <li><a class="rec-chip" href="https://onlinejudge.org/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#64748B,#475569)">OJ</span>OnlineJudge<span class="rec-chip__arrow">↗</span></a></li>
+        </ul>
+      </li>
+      <li class="rec-group rec-group--tools">
+        <div class="rec-group__head">
+          <span class="rec-group__icon">⚒</span>
+          <span class="rec-group__name">{{ _('Tools') }}</span>
+        </div>
+        <ul class="rec-chips">
+          <li><a class="rec-chip" href="https://oier.baoshuo.dev/" target="_blank" rel="noopener"><span class="rec-chip__abbr" style="background:linear-gradient(135deg,#10B981,#059669)">OI</span>OIerDb<span class="rec-chip__arrow">↗</span></a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
 </div>
