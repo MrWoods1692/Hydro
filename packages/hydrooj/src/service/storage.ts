@@ -821,6 +821,7 @@ class StorageToStorageService {
 }
 
 export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>) {
+    console.log('[storage.apply] config.type =', config.type, 'config =', JSON.stringify(config));
     if (config.type === 's3') {
         service = new RemoteStorageService(config);
     } else if (config.type === 'webdav') {
