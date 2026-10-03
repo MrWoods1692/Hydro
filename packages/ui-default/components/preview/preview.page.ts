@@ -50,7 +50,8 @@ function bindCopyLink(id, src: string) {
   src = src.replace(/\(/g, '%28').replace(/\)/g, '%29');
   const url = !['file', 'files'].some((i) => window.location.href.endsWith(i))
     || ['homework', 'training'].some((i) => window.location.href.match(`${i}/.*/file`))
-    ? `file://${src.substring(src.lastIndexOf('/') + 1)}` : src;
+    ? `file://${src.substring(src.lastIndexOf('/') + 1)}` 
+    : new URL(src, window.location.href).toString();
   const clip = new Clipboard(`#copy-${id}`, { text: () => url });
   clip.on('success', () => Notification.success(i18n(`${url.startsWith('file://') ? 'Reference' : 'Download'} link copied to clipboard!`)));
   clip.on('error', () => Notification.error(i18n('Copy failed :(')));
