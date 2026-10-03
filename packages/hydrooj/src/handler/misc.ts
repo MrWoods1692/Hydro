@@ -41,8 +41,8 @@ export class FilesHandler extends Handler {
         const totalFiles = system.get('limit.user_files');
         // pre-format sizes and percentages server-side (Nunjucks has no size filter)
         const fmt = (n: number) => {
-            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-            if (n < 1024) return `${n} B`;
+            const units = ['字节', 'KB', 'MB', 'GB', 'TB'];
+            if (n < 1024) return `${n} 字节`;
             let i = 0;
             let v = n / 1024;
             while (v >= 1024 && i < units.length - 2) { v /= 1024; i += 1; }

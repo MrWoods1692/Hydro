@@ -1,4 +1,7 @@
 {% import "components/nothing.html" as nothing with context %}
+{% macro sz(n) -%}
+  {%- if n < 1024 -%}{{ n }} 字节{% elif n < 1048576 -%}{{ (n/1024)|round }} KB{% elif n < 1073741824 -%}{{ (n/1048576)|round }} MB{% else -%}{{ (n/1073741824)|round }} GB{%- endif -%}
+{%- endmacro %}
 <div class="section__body no-padding files" {% if filetype %}data-type="{{ filetype }}"{% endif %} data-fragment-id="files{% if filetype %}-{{ filetype }}{% endif %}">
   {% if files.length %}
     <table class="data-table">
@@ -17,8 +20,8 @@
             </label>
           </th>
           {% endif %}
-          <th class="col--name">{{ _('Filename') }}</th>
-          <th class="col--size">{{ _('Size') }}</th>
+          <th class="col--name">{{ _('文件名') }}</th>
+          <th class="col--size">{{ _('大小') }}</th>
           <th class="col--operation"><span class="icon icon-wrench"></span></th>
         </tr>
       </thead>
@@ -35,7 +38,7 @@
           <td class="col--name" data-preview>
             <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
           </td>
-          <td class="col--size">{{ size(file.size) }}</td>
+          <td class="col--size">{{ sz(file.size) }}</td>
           <td class="col--operation">
             <a href="{{ urlForFile(file.name, filetype) }}" class="icon icon-download"></a>
           </td>
@@ -44,6 +47,6 @@
       </tbody>
     </table>
   {% else %}
-    {{ nothing.render('There are no files currently.', compact=true) }}
+    {{ nothing.render('暂无文件', compact=true) }}
   {% endif %}
 </div>
