@@ -40,9 +40,7 @@ export default class CheckService extends Service {
                 warn(`Hydro is running on ${platform}, suggest to use linux4.4+.`);
             }
         });
-        this.addChecker('Mail', async (c, log, warn) => {
-            const from = system.get('smtp.from');
-            if (!from) warn('SMTP account is not provided, email verification disabled.');
+        this.addChecker('Mail', async () => {
         });
         this.addChecker('Setting', async (c, log, warn) => {
             const url = system.get('server.url');

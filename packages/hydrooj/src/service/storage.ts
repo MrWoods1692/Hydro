@@ -520,7 +520,9 @@ class WebDavStorageService {
                 await writeFile(path, merged);
                 return null;
             }
-            return Readable.from(merged);
+            const p = new PassThrough();
+            p.end(merged);
+            return p;
         }
 
         // Single file
