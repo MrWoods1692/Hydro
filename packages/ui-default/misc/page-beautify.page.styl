@@ -605,6 +605,28 @@ body
   -webkit-backdrop-filter: blur(6px)
   border-bottom: 1px solid rgba(0, 0, 0, .06)
 
+  // 移动端侧边栏保持深色背景和白色文字
+  &.slideout-menu
+    background: #1D1F20 !important
+    backdrop-filter: none !important
+    -webkit-backdrop-filter: none !important
+    border-bottom: 0 !important
+
+    .nav__item,
+    .nav__item--round,
+    .nav .dropdown-target.menu .menu__link
+      color: #FFF !important
+
+      &:hover,
+      &:visited,
+      &:active
+        color: #FFF !important
+        background: rgba(#FFF, 0.10) !important
+
+    .nav__item.nav--active
+      color: #FFF !important
+      border-color: #FFF !important
+
 .main
   position: relative
   z-index: 1
