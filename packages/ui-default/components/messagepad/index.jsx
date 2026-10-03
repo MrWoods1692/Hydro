@@ -16,9 +16,15 @@ const mapDispatchToProps = (dispatch) => ({
       payload: request.get('', { _: Date.now() }),
     });
   },
+  clearActive() {
+    dispatch({
+      type: 'DIALOGUES_SWITCH_TO',
+      payload: null,
+    });
+  },
 });
 
-const MessagePadContainer = ({ onAdd, activeId }) => {
+const MessagePadContainer = ({ onAdd, activeId, clearActive }) => {
   const [users, setUsers] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
@@ -43,7 +49,6 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
 
   useEffect(() => {
     if (activeId === null) return;
-    // 从个人主页发起消息时，all 列表可能不含该用户，精确拉取补进（函数式去重）
     api('users', { search: String(activeId), exact: true }, PROJECTION)
       .then((data) => {
         if (Array.isArray(data) && data.length) {
@@ -67,8 +72,11 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
     window.location.href = `/user/${uid}`;
   }
 
+  const cn = ['messagepad', 'clearfix'];
+  if (activeId !== null) cn.push('has-active-dialogue');
+
   return (
-    <div className="messagepad clearfix">
+    <div className={cn.join(' ')}>
       <div className="messagepad__sidebar">
         <div className="section__header messagepad__search">
           <Icon name="search" className="messagepad__search__icon" />
@@ -104,7 +112,7 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
                 ))}
         </ol>
       </div>
-      <MessagePadDialogueContent />
+      <MessagePadDialogueContent onBack={clearActive} />
       <MessagePadInput />
     </div>
   );
@@ -113,6 +121,7 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
 MessagePadContainer.propTypes = {
   onAdd: PropTypes.func.isRequired,
   activeId: PropTypes.number,
+  clearActive: PropTypes.func.isRequired,
 };
 
 export default connect((state) => ({ activeId: state.activeId }), mapDispatchToProps)(MessagePadContainer);
