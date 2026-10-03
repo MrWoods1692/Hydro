@@ -69,6 +69,7 @@ const FileSetting = Schema.intersect([
             Schema.const('file').i18n({ en: 'Local Directory', zh: '本地目录' }),
             Schema.const('s3').description('S3'),
             Schema.const('webdav').description('WebDAV'),
+        Schema.const('storage_to').description('storage.to'),
         ] as const).i18n({ en: 'Storage Provider Type', zh: '存储提供商类型' }),
         endPointForUser: Schema.string().default('/fs/'),
         endPointForJudge: Schema.string().default('/fs/'),
@@ -93,6 +94,11 @@ const FileSetting = Schema.intersect([
             endPoint: Schema.string().description('WebDAV server URL, e.g. https://example.com/dav'),
             username: Schema.string(),
             password: Schema.string().role('secret'),
+            secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
+        }),
+        Schema.object({
+            type: Schema.const('storage_to').required(),
+            token: Schema.string().role('secret').description('storage.to API token'),
             secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
         }),
     ] as const),
@@ -680,11 +686,147 @@ class WebDavStorageService {
     }
 }
 
+class StorageToStorageService {
+    error = '';
+    private token = '';
+    private apiBase = 'https://storage.to/api';
+    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+    private static readonly dispatcher = new Agent({
+        connect: { rejectUnauthorized: false },
+    });
+    private files: Map<string, { url: string; raw_url?: string }> = new Map();
+
+    constructor(private config: ReturnType<typeof FileSetting>) {
+    }
+
+    async start() {
+        this.token = this.config.token;
+        logger.success('storage.to service ready.');
+        this.error = '';
+    }
+
+    private async api(path: string, init?: RequestInit) {
+        return fetch(`${this.apiBase}${path}`, {
+            ...init,
+            headers: {
+                Authorization: `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                ...init?.headers,
+            },
+            dispatcher: StorageToStorageService.dispatcher,
+        } as any);
+    }
+
+    async put(target: string, file: string | Buffer | Readable, meta: Record<string, string> = {}): Promise<string> {
+        target = convertPath(target);
+        const filename = meta.filename || target.split('/').pop() || 'file';
+        const contentType = meta['Content-Type'] || lookup(filename) || 'application/octet-stream';
+
+        let buf: Buffer;
+        if (typeof file === 'string') {
+            buf = await streamToBuffer(createReadStream(file));
+        } else if (file instanceof Buffer) {
+            buf = file;
+        } else {
+            buf = await streamToBuffer(file);
+        }
+
+        const size = buf.byteLength;
+
+        // Step 1: Init
+        const initRes = await this.api('/upload/init', {
+            method: 'POST',
+            body: JSON.stringify({ filename, content_type: contentType, size }),
+        });
+        const initData = await initRes.json();
+        if (!initData.success) throw new Error(`storage.to init failed: ${JSON.stringify(initData)}`);
+
+        const uploadUrl = initData.upload_url;
+        const r2Key = initData.r2_key;
+
+        // Step 2: PUT to R2
+        const r2Headers = initData.headers || {};
+        const r2HeadersObj: Record<string, string> = {};
+        for (const [k, v] of Object.entries(r2Headers)) {
+            if (Array.isArray(v)) r2HeadersObj[k] = v[0];
+        }
+        const putRes = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: buf as unknown as ReadableStream,
+            headers: r2HeadersObj,
+            dispatcher: StorageToStorageService.dispatcher,
+        } as any);
+        if (!putRes.ok) throw new Error(`storage.to upload to R2 failed: ${putRes.status} ${await putRes.text()}`);
+
+        // Step 3: Confirm
+        const confirmRes = await this.api('/upload/confirm', {
+            method: 'POST',
+            body: JSON.stringify({ r2_key: r2Key, filename, content_type: contentType, size }),
+        });
+        const confirmData = await confirmRes.json();
+        if (!confirmData.success) throw new Error(`storage.to confirm failed: ${JSON.stringify(confirmData)}`);
+
+        const fileUrl = confirmData.file.url;
+        this.files.set(target, { url: fileUrl });
+        logger.info(`Uploaded ${target} -> ${fileUrl}`);
+        return fileUrl;
+    }
+
+    async get(target: string, options?: { stream?: Readable, buffer?: boolean }): Promise<string | Readable> {
+        target = convertPath(target);
+        const entry = this.files.get(target);
+        if (!entry) {
+            logger.warn(`storage.to file not found: ${target}`);
+            return `https://storage.to/${target}`;
+        }
+        if (options?.buffer) {
+            const res = await fetch(entry.url, {
+                dispatcher: StorageToStorageService.dispatcher,
+            } as any);
+            const buf = Buffer.from(await res.arrayBuffer());
+            return buf as any;
+        }
+        if (options?.stream) {
+            const res = await fetch(entry.url, {
+                dispatcher: StorageToStorageService.dispatcher,
+            } as any);
+            return Readable.fromWeb(res.body as any);
+        }
+        return entry.url;
+    }
+
+    async sign(target: string, options?: { filename?: string, noExpire?: boolean }): Promise<string> {
+        target = convertPath(target);
+        const entry = this.files.get(target);
+        if (entry) return entry.url;
+        return `https://storage.to/${target}`;
+    }
+
+    async isLinkValid(link: string) {
+        return true;
+    }
+
+    async signUpload() {
+        throw new Error('Not implemented for storage.to');
+    }
+
+    async status() {
+        return {
+            type: 'storage.to',
+            status: !this.error,
+            error: this.error,
+            bucket: 'storage.to',
+        };
+    }
+}
+
 export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>) {
     if (config.type === 's3') {
         service = new RemoteStorageService(config);
     } else if (config.type === 'webdav') {
         service = new WebDavStorageService(config);
+    } else if (config.type === 'storage_to') {
+        service = new StorageToStorageService(config);
     } else {
         service = new LocalStorageService(config);
     }
@@ -719,7 +861,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
 
 declare module 'cordis' {
     interface Context {
-        storage: RemoteStorageService | LocalStorageService | WebDavStorageService;
+        storage: RemoteStorageService | LocalStorageService | WebDavStorageService | StorageToStorageService;
     }
 }
 
@@ -728,5 +870,5 @@ const serviceProxy = new Proxy({}, {
     get(self, key) {
         return service[key];
     },
-}) as RemoteStorageService | LocalStorageService | WebDavStorageService;
+}) as RemoteStorageService | LocalStorageService | WebDavStorageService | StorageToStorageService;
 export default serviceProxy;
