@@ -263,8 +263,7 @@ $radius = 10px
     margin: rem(2px 6px)
 
   .messagepad__header,
-  .messagepad__content,
-  .messagepad__input
+  .messagepad__content
     position: fixed
     left: 0
     right: 0
@@ -286,13 +285,16 @@ $radius = 10px
   .messagepad__input
     bottom: 0
     height: rem($input-height)
+    position: fixed
+    left: 0
+    right: 0
+    z-index: 100
 
   .messagepad.has-active-dialogue .messagepad__sidebar
     display: none
 
   .messagepad.has-active-dialogue .messagepad__header,
-  .messagepad.has-active-dialogue .messagepad__content,
-  .messagepad.has-active-dialogue .messagepad__input
+  .messagepad.has-active-dialogue .messagepad__content
     display: block
 
   .messagepad__back-btn

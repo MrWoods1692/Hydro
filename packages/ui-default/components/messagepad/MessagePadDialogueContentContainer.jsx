@@ -15,7 +15,7 @@ const mapStateToProps = (state) => ({
     : null,
 });
 
-export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
+export default connect(mapStateToProps, { clearActive: () => ({ type: 'DIALOGUES_SWITCH_TO', payload: null }) })(class MessagePadDialogueContentContainer extends React.PureComponent {
   componentDidUpdate(prevProps) {
     const node = this.state.ref;
 
@@ -86,9 +86,15 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
   }
 
   render() {
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
     return (
       <>
         <div className="messagepad__header">
+          {isMobile && this.props.activeId !== null && (
+            <button className="messagepad__back-btn" onClick={() => this.props.clearActive()} title="Back">
+              <span>←</span>
+            </button>
+          )}
           {this.props.item && (
             <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
               {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
