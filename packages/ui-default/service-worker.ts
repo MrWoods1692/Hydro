@@ -242,8 +242,8 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   }
   if (!['get', 'post', 'head'].includes(event.request.method.toLowerCase())) return;
   if (!config) return; // Don't do anything when not initialized
-  // Don't intercept requests with a body (e.g. file uploads)
-  if (event.request.body) return;
+  // Don't intercept POST/PUT requests (e.g. file uploads)
+  if (event.request.method !== 'GET' && event.request.method !== 'HEAD') return;
   const url = new URL(event.request.url);
   const isAsset = config.assets.some((i) => event.request.url.startsWith(i));
   const rewritable = !isAsset && config.domains.length > 1
