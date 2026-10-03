@@ -241,3 +241,124 @@ $radius = 10px
     &:focus
       border-color: #C8C4BC
       box-shadow: 0 0 0 3px rgba(200, 196, 188, 0.15)
+
+// ========== 移动端可收缩 ==========
++mobile()
+  .messagepad__sidebar
+    width: 100%
+    height: 100vh
+    display: flex
+    flex-direction: column
+    float: none
+    border-right: 0
+
+  .messagepad__list
+    flex: 1
+    height: auto
+    overflow-y: auto
+    -webkit-overflow-scrolling: touch
+
+  .messagepad__user-item
+    padding: rem(12px 14px)
+    margin: rem(2px 6px)
+
+  .messagepad__header,
+  .messagepad__content,
+  .messagepad__input
+    position: fixed
+    left: 0
+    right: 0
+    z-index: 100
+    display: none
+
+  .messagepad__header
+    top: 0
+    height: rem(48px)
+    padding: rem(8px 16px)
+    background: #FAFAF8
+    border-bottom: 1px solid #E8E6E2
+
+  .messagepad__content
+    top: rem(48px)
+    bottom: rem($input-height)
+    padding: rem(12px 16px)
+
+  .messagepad__input
+    bottom: 0
+    height: rem($input-height)
+
+  .messagepad.has-active-dialogue .messagepad__sidebar
+    display: none
+
+  .messagepad.has-active-dialogue .messagepad__header,
+  .messagepad.has-active-dialogue .messagepad__content,
+  .messagepad.has-active-dialogue .messagepad__input
+    display: block
+
+  .messagepad__back-btn
+    position: absolute
+    left: rem(8px)
+    top: 50%
+    transform: translateY(-50%)
+    width: rem(32px)
+    height: rem(32px)
+    display: flex
+    align-items: center
+    justify-content: center
+    border: 0
+    background: none
+    cursor: pointer
+    color: #3A3A38
+    font-size: rem(20px)
+    border-radius: rem(8px)
+    transition: background 0.15s ease
+    z-index: 10
+
+    &:hover
+      background: rgba(0, 0, 0, 0.06)
+
+// ========== 可收缩侧边栏 ==========
+.messagepad__toggle
+  flex: none
+  border: 0
+  background: none
+  cursor: pointer
+  color: #B0ACA6
+  font-size: rem(18px)
+  width: rem(28px)
+  height: rem(28px)
+  display: flex
+  align-items: center
+  justify-content: center
+  border-radius: rem(8px)
+  transition: background 0.15s ease, color 0.15s ease
+  margin-left: auto
+
+  &:hover
+    background: rgba(0, 0, 0, 0.06)
+    color: #6A6560
+
+.messagepad__sidebar
+  transition: width 0.2s ease, min-width 0.2s ease
+
+.messagepad.collapsed
+  .messagepad__sidebar
+    width: rem(48px)
+    border-right: 0
+
+  .messagepad__search
+    padding: rem(10px 8px)
+
+  .messagepad__search__icon,
+  .messagepad__search__input,
+  .messagepad__search__clear
+    display: none
+
+.messagepad.collapsed .messagepad__header
+  left: rem(48px)
+
+.messagepad.collapsed .messagepad__content
+  left: rem(48px)
+
+.messagepad.collapsed .messagepad__input
+  left: rem(48px)

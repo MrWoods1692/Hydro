@@ -16,13 +16,20 @@ const mapDispatchToProps = (dispatch) => ({
       payload: request.get('', { _: Date.now() }),
     });
   },
+  clearActive() {
+    dispatch({
+      type: 'DIALOGUES_SWITCH_TO',
+      payload: null,
+    });
+  },
 });
 
-const MessagePadContainer = ({ onAdd, activeId }) => {
+const MessagePadContainer = ({ onAdd, activeId, clearActive }) => {
   const [users, setUsers] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -67,8 +74,13 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
     window.location.href = `/user/${uid}`;
   }
 
+  const hasActive = activeId !== null;
+  const cn = ['messagepad', 'clearfix'];
+  if (hasActive) cn.push('has-active-dialogue');
+  if (collapsed) cn.push('collapsed');
+
   return (
-    <div className="messagepad clearfix">
+    <div className={cn.join(' ')}>
       <div className="messagepad__sidebar">
         <div className="section__header messagepad__search">
           <Icon name="search" className="messagepad__search__icon" />
@@ -82,7 +94,15 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
           {keyword
             ? <button className="messagepad__search__clear" onClick={() => setKeyword('')} title={i18n('Clear')}>×</button>
             : null}
+          <button
+            className="messagepad__toggle"
+            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <Icon name={collapsed ? 'chevron_right' : 'chevron_left'} />
+          </button>
         </div>
+        {!collapsed && (
         <ol className="messagepad__list" style={{ overscrollBehavior: 'contain' }}>
           {loading
             ? <li className="messagepad__list__status">{i18n('Loading...')}</li>
@@ -103,6 +123,7 @@ const MessagePadContainer = ({ onAdd, activeId }) => {
                   />
                 ))}
         </ol>
+        )}
       </div>
       <MessagePadDialogueContent />
       <MessagePadInput />
