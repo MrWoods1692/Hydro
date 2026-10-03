@@ -30,7 +30,8 @@ function requestOrigin(handler: Handler): string {
 function resolveRedirectUri(handler: Handler): string {
     const fromEnv = String(process.env.CAMPUX_OAUTH_CALLBACK || '').trim();
     if (fromEnv) return fromEnv;
-    const base = requestOrigin(handler).replace(/\/+$/, '/');
+    let base = requestOrigin(handler).replace(/\/+$/, '');
+    base += '/';
     return `${base}oauth/campux/callback`;
 }
 
