@@ -19,7 +19,7 @@ const previewConfig: Record<string, string> = {
   contest_edit: './file/public/',
 };
 const isCreatePage = ['problem_create', 'homework_create', 'contest_create'].includes(pagename);
-const filePreviewPrefix = previewConfig[pagename] || (isCreatePage ? `/file/${UserContext._id}/` : null);
+const filePreviewPrefix = previewConfig[pagename] || (isCreatePage ? `${window.location.origin}/file/${UserContext._id}/` : null);
 
 config({
   markdownItConfig(mdit) {

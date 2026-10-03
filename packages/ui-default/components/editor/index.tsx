@@ -243,7 +243,7 @@ export default class Editor extends DOMAttachedObject {
             type: uploadCfg?.type,
             filenameCallback: () => filename,
           }).then(() => {
-            callback([`${useFileProtocol ? 'file://' : `/file/${UserContext._id}/`}${filename}`]);
+            callback([`${useFileProtocol ? 'file://' : `${window.location.origin}/file/${UserContext._id}/`}${filename}`]);
           }).catch(() => {
             callback([]);
           });

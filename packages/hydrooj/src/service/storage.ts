@@ -406,6 +406,8 @@ class WebDavStorageService {
     private authHeader = '';
     private base = '';
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+    private static readonly CHUNK_SIZE = 900 * 1024; // 900KB per chunk (WebDAV limit ~1MB)
+    private static readonly META_SUFFIX = '.chunks.json';
 
     constructor(private config: ReturnType<typeof FileSetting>) {
     }
@@ -413,6 +415,34 @@ class WebDavStorageService {
     private resourceUrl(target: string) {
         const base = this.base.endsWith('/') ? this.base : `${this.base}/`;
         return `${base}${target.split('/').map(encodeURIComponent).join('/')}`;
+    }
+
+    private async streamToBuffer(stream: Readable): Promise<Buffer> {
+        const chunks: Buffer[] = [];
+        for await (const chunk of stream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        return Buffer.concat(chunks);
+    }
+
+    private async putSingle(target: string, data: Buffer, meta: Record<string, string> = {}) {
+        const headers: Record<string, string> = {
+            Authorization: this.authHeader,
+            'Content-Type': meta['Content-Type'] || 'application/octet-stream',
+        };
+        const body = new Uint8Array(data);
+        const res = await fetch(this.resourceUrl(target), { method: 'PUT', headers, body });
+        if (!res.ok && res.status !== 201) throw new Error(`WebDAV PUT failed: HTTP ${res.status}`);
+        await res.arrayBuffer();
+    }
+
+    private async deleteResource(target: string) {
+        const res = await fetch(this.resourceUrl(target), {
+            method: 'DELETE',
+            headers: { Authorization: this.authHeader },
+        });
+        if (!res.ok && res.status !== 404) throw new Error(`WebDAV DELETE failed: HTTP ${res.status}`);
+        await res.arrayBuffer();
     }
 
     async start() {
@@ -443,20 +473,57 @@ class WebDavStorageService {
         target = convertPath(target);
         const dir = dirname(target);
         if (dir && dir !== '.') await this.ensureDir(dir);
-        const body: Buffer | Readable = typeof file === 'string' ? createReadStream(file) : file;
-        const headers: Record<string, string> = {
-            Authorization: this.authHeader,
-            'Content-Type': meta['Content-Type'] || 'application/octet-stream',
-        };
-        const options: Record<string, unknown> = { method: 'PUT', headers, body };
-        if (!(body instanceof Buffer)) options.duplex = 'half';
-        const res = await fetch(this.resourceUrl(target), options as never);
-        if (!res.ok && res.status !== 201) throw new Error(`WebDAV PUT failed: HTTP ${res.status}`);
-        await res.arrayBuffer();
+
+        const body = typeof file === 'string' ? createReadStream(file) : file;
+        const content = Buffer.isBuffer(body) ? body : await this.streamToBuffer(body as Readable);
+
+        if (content.length <= WebDavStorageService.CHUNK_SIZE) {
+            // Single chunk - direct upload
+            await this.putSingle(target, content, meta);
+            return;
+        }
+
+        // Chunked upload
+        const chunks = Math.ceil(content.length / WebDavStorageService.CHUNK_SIZE);
+        const metaInfo = { totalChunks: chunks, chunkSize: WebDavStorageService.CHUNK_SIZE, totalSize: content.length, meta };
+
+        logger.info(`Uploading ${target}: ${chunks} chunks, ${content.length} bytes`);
+        for (let i = 0; i < chunks; i++) {
+            const chunk = content.slice(i * WebDavStorageService.CHUNK_SIZE, (i + 1) * WebDavStorageService.CHUNK_SIZE);
+            await this.putSingle(`${target}.chunk${i}`, chunk, { 'Content-Type': 'application/octet-stream' });
+        }
+        await this.putSingle(`${target}${WebDavStorageService.META_SUFFIX}`, Buffer.from(JSON.stringify(metaInfo)), { 'Content-Type': 'application/json' });
     }
 
     async get(target: string, path?: string) {
         target = convertPath(target);
+
+        // Check if chunked file
+        const metaRes = await fetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
+            method: 'GET',
+            headers: { Authorization: this.authHeader },
+        });
+        if (metaRes.ok) {
+            const info = JSON.parse(await metaRes.text());
+            logger.info(`Merging ${info.totalChunks} chunks for ${target}`);
+            let merged = Buffer.alloc(info.totalSize);
+            for (let i = 0; i < info.totalChunks; i++) {
+                const chunkRes = await fetch(this.resourceUrl(`${target}.chunk${i}`), {
+                    method: 'GET',
+                    headers: { Authorization: this.authHeader },
+                });
+                if (!chunkRes.ok) throw new Error(`WebDAV GET chunk ${i} failed: HTTP ${chunkRes.status}`);
+                const chunkBuffer = Buffer.from(await chunkRes.arrayBuffer());
+                chunkBuffer.copy(merged, i * info.chunkSize);
+            }
+            if (path) {
+                await writeFile(path, merged);
+                return null;
+            }
+            return Readable.from(merged);
+        }
+
+        // Single file
         const res = await fetch(this.resourceUrl(target), {
             method: 'GET',
             headers: { Authorization: this.authHeader },
@@ -484,16 +551,44 @@ class WebDavStorageService {
     async del(target: MaybeArray<string>) {
         const targets = (typeof target === 'string' ? [target] : target).map(convertPath);
         await Promise.all(targets.map(async (t) => {
-            const res = await fetch(this.resourceUrl(t), {
-                method: 'DELETE',
+            // Check if chunked
+            const metaRes = await fetch(this.resourceUrl(`${t}${WebDavStorageService.META_SUFFIX}`), {
+                method: 'GET',
                 headers: { Authorization: this.authHeader },
             });
-            if (!res.ok && res.status !== 404) throw new Error(`WebDAV DELETE failed: HTTP ${res.status}`);
+            if (metaRes.ok) {
+                const info = JSON.parse(await metaRes.text());
+                for (let i = 0; i < info.totalChunks; i++) {
+                    await this.deleteResource(`${t}.chunk${i}`);
+                }
+                await this.deleteResource(`${t}${WebDavStorageService.META_SUFFIX}`);
+            }
+            await this.deleteResource(t);
         }));
     }
 
     async getMeta(target: string) {
         target = convertPath(target);
+
+        // Check if chunked file
+        const metaRes = await fetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
+            method: 'GET',
+            headers: { Authorization: this.authHeader },
+        });
+        if (metaRes.ok) {
+            const info = JSON.parse(await metaRes.text());
+            return {
+                size: info.totalSize,
+                etag: Buffer.from(target).toString('base64'),
+                lastModified: new Date(),
+                metaData: info.meta || {
+                    'Content-Type': (target.endsWith('.ans') || target.endsWith('.out')) ? 'text/plain' : lookup(target) || 'application/octet-stream',
+                    'Content-Length': info.totalSize,
+                },
+            };
+        }
+
+        // Single file
         const res = await fetch(this.resourceUrl(target), {
             method: 'PROPFIND',
             headers: {
@@ -535,7 +630,6 @@ class WebDavStorageService {
                 method: 'MKCOL',
                 headers: { Authorization: this.authHeader },
             });
-            // 405 / 409 mean the collection already exists
             if (res.status !== 201 && res.status !== 405 && res.status !== 409) {
                 logger.warn(`WebDAV MKCOL ${current}: HTTP ${res.status}`);
             }
@@ -551,8 +645,6 @@ class WebDavStorageService {
         const expire = (Date.now() + (noExpire ? 7 * 24 * 3600 : 600) * 1000).toString();
         url.searchParams.set('expire', expire);
         url.searchParams.set('secret', md5(`${target}/${expire}/${this.config.secret}`));
-        // WebDAV downloads are served by the app's own signed /storage route,
-        // so the URL must NOT be rewritten to the /fs/ proxy endpoint.
         return `/${url.toString().split('localhost/')[1]}`;
     }
 
