@@ -11,6 +11,7 @@ import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
 import record from '../model/record';
 import * as setting from '../model/setting';
+import storage from '../model/storage';
 import system from '../model/system';
 import user from '../model/user';
 import {
@@ -351,6 +352,61 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+class SystemStorageHandler extends SystemHandler {
+    async get() {
+        const totalPool = system.get('limit.total_storage') || 1024 ** 5;
+        const docs = await storage.coll.find({ path: /^user\//, autoDelete: null })
+            .project<{ path: string, size: number }>({ path: 1, size: 1 })
+            .toArray();
+        const byUser: Record<string, { size: number, count: number }> = {};
+        let totalUsed = 0;
+        let totalFiles = 0;
+        for (const d of docs) {
+            const uid = d.path.split('/')[1];
+            if (!byUser[uid]) byUser[uid] = { size: 0, count: 0 };
+            byUser[uid].size += d.size;
+            byUser[uid].count += 1;
+            totalUsed += d.size;
+            totalFiles += 1;
+        }
+        const uidList = Object.keys(byUser);
+        const udict = await user.getList('system', uidList.map((i) => +i));
+        const fmt = (n: number) => {
+            const units = ['字节', 'KB', 'MB', 'GB', 'TB'];
+            if (n < 1024) return `${n} 字节`;
+            let i = 0;
+            let v = n / 1024;
+            while (v >= 1024 && i < units.length - 2) { v /= 1024; i += 1; }
+            return `${v.toFixed(v >= 100 ? 0 : 1)} ${units[i + 1]}`;
+        };
+        const users = Object.entries(byUser).map(([uid, v]) => {
+            const u = udict[+uid];
+            return {
+                uid: +uid,
+                uname: u?.uname || `#${uid}`,
+                size: v.size,
+                sizeText: fmt(v.size),
+                count: v.count,
+                percent: totalPool > 0 ? Math.min(100, Math.round(v.size / totalPool * 100000) / 1000) : 0,
+            };
+        }).sort((a, b) => b.size - a.size);
+        this.response.body = {
+            totalPool,
+            totalPoolText: fmt(totalPool),
+            totalUsed,
+            totalUsedText: fmt(totalUsed),
+            totalRemaining: Math.max(0, totalPool - totalUsed),
+            totalRemainingText: fmt(Math.max(0, totalPool - totalUsed)),
+            totalPercent: totalPool > 0 ? Math.min(100, Math.round(totalUsed / totalPool * 100000) / 1000) : 0,
+            totalFiles,
+            userCount: uidList.length,
+            users,
+            urlForUser: (uid: number) => this.url('user_detail', { uid }),
+        };
+        this.response.template = 'manage_storage.html';
+    }
+}
+
 export const inject = ['setting', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
@@ -360,5 +416,6 @@ export async function apply(ctx) {
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Route('manage_storage', '/manage/storage', SystemStorageHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }

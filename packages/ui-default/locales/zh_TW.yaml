@@ -570,6 +570,7 @@ manage_join_applications: 加域申請
 manage_module: 管理模組
 manage_script: 指令碼管理
 manage_setting: 系統設定
+manage_storage: 儲存空間統計
 manage_user_priv: 使用者許可權
 manage: 管理
 Manage: 管理

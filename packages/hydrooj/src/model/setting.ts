@@ -330,6 +330,7 @@ SystemSetting(
     Setting('setting_limits', 'limit.problem_files_max_size', 256 * 1024 * 1024, 'number', 'limit.problem_files_max_size', 'Max files size per problem'),
     Setting('setting_limits', 'limit.user_files', 100, 'number', 'limit.user_files', 'Max files for user'),
     Setting('setting_limits', 'limit.user_files_size', 128 * 1024 * 1024, 'number', 'limit.user_files_size', 'Max total file size for user'),
+    Setting('setting_limits', 'limit.total_storage', 1024 ** 5, 'number', 'limit.total_storage', 'Total storage pool for all users'),
     Setting('setting_limits', 'limit.contest_files', 100, 'number', 'limit.contest_files', 'Max files for contest or training'),
     Setting('setting_limits', 'limit.contest_files_size', 128 * 1024 * 1024, 'number', 'limit.contest_files_size', 'Max total file size for contest or training'),
     Setting('setting_limits', 'limit.team_members', 5, 'number', 'limit.team_members', 'Max members per contest team'),

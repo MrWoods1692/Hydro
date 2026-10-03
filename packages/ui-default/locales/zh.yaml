@@ -577,6 +577,7 @@ manage_join_applications: 加域申请
 manage_module: 管理模块
 manage_script: 脚本管理
 manage_setting: 系统设置
+manage_storage: 存储统计
 manage_user_priv: 用户权限
 manage: 管理
 Manage: 管理

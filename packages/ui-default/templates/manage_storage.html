@@ -1,0 +1,140 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<style>
+  .storage-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 768px) { .storage-summary { grid-template-columns: repeat(2, 1fr); } }
+  .storage-stat {
+    background: linear-gradient(180deg, #FFFFFF, #FCFCFA);
+    border: 1px solid #E8E6E2; border-radius: 14px;
+    padding: 20px 18px; text-align: center; position: relative; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(58,58,56,0.05);
+  }
+  .storage-stat::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(58,58,56,0.5), transparent);
+  }
+  .storage-stat__value { font-size: 24px; font-weight: 800; color: #3A3A38; letter-spacing: -.3px; }
+  .storage-stat__label { font-size: 12px; color: #9A9690; margin-top: 6px; font-weight: 500; }
+  .storage-bar-wrap { margin-bottom: 24px; }
+  .storage-bar-title { display: flex; justify-content: space-between; font-size: 13px; color: #6A6560; margin-bottom: 8px; }
+  .storage-bar-title b { color: #3A3A38; font-weight: 700; }
+  .storage-bar { height: 12px; background: #F0EFEB; border-radius: 999px; overflow: hidden; }
+  .storage-bar__fill {
+    height: 100%; min-width: 12px;
+    background: linear-gradient(90deg, #6A6560, #3A3A38);
+    border-radius: 999px; transition: width .5s ease;
+    box-shadow: 0 0 8px rgba(58,58,56,0.3);
+  }
+  .user-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .user-table thead th {
+    text-align: left; padding: 12px 14px; color: #9A9690; font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    border-bottom: 2px solid #E8E6E2;
+  }
+  .user-table tbody td { padding: 12px 14px; border-bottom: 1px solid #EEEEEA; }
+  .user-table tbody tr:hover { background: #F7F7F5; }
+  .user-table .uname { font-weight: 600; color: #3A3A38; }
+  .user-table .uname a { color: #3A3A38; text-decoration: none; }
+  .user-table .uname a:hover { color: #6A6560; }
+  .user-table .uid-tag {
+    display: inline-block; font-size: 11px; color: #9A9690;
+    background: #F0EFEB; padding: 2px 8px; border-radius: 4px; font-family: monospace;
+  }
+  .user-table .size-cell { font-family: monospace; color: #3A3A38; font-weight: 600; }
+  .user-table .count-cell { color: #6A6560; }
+  .user-bar { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+  .user-bar__track { flex: 1; height: 6px; background: #F0EFEB; border-radius: 999px; overflow: hidden; }
+  .user-bar__fill { height: 100%; background: linear-gradient(90deg, #9A9690, #6A6560); border-radius: 999px; min-width: 4px; }
+  .user-bar__pct { flex: 0 0 56px; text-align: right; font-size: 11px; color: #9A9690; }
+  .section__body { padding: 20px 24px !important; }
+  .manage-empty { text-align: center; padding: 40px 0; color: #9A9690; font-size: 14px; }
+  .side .menu__link.active, .side .menu__link.active:hover {
+    background: #F0EFEB !important; color: #3A3A38 !important;
+    border-left: 3px solid #3A3A38 !important;
+  }
+  .side .menu__item { border-bottom: 1px solid #EEEEEA; }
+  .section__header {
+    background: linear-gradient(135deg, #FFFFFF, #FAFAF7) !important;
+    border-bottom: 1px solid #EEEEEA;
+  }
+  .section__header .section__title { color: #3A3A38 !important; }
+</style>
+
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">存储统计</h1>
+  </div>
+  <div class="section__body">
+    <div class="storage-summary">
+      <div class="storage-stat">
+        <div class="storage-stat__value">{{ totalPoolText }}</div>
+        <div class="storage-stat__label">总存储池</div>
+      </div>
+      <div class="storage-stat">
+        <div class="storage-stat__value">{{ totalUsedText }}</div>
+        <div class="storage-stat__label">已使用</div>
+      </div>
+      <div class="storage-stat">
+        <div class="storage-stat__value">{{ totalRemainingText }}</div>
+        <div class="storage-stat__label">剩余额度</div>
+      </div>
+      <div class="storage-stat">
+        <div class="storage-stat__value">{{ userCount }}</div>
+        <div class="storage-stat__label">活跃用户</div>
+      </div>
+    </div>
+
+    <div class="storage-bar-wrap">
+      <div class="storage-bar-title">
+        <span>总池使用进度</span>
+        <span>已使用 <b>{{ totalUsedText }}</b> / {{ totalPoolText }}（{{ totalPercent }}%）</span>
+      </div>
+      <div class="storage-bar">
+        <div class="storage-bar__fill" style="width: {{ totalPercent }}%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">用户存储明细</h1>
+  </div>
+  <div class="section__body no-padding">
+    {% if users.length %}
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>用户</th>
+          <th>已用空间</th>
+          <th>文件数</th>
+          <th>占总池比例</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="uname">
+            <a href="{{ urlForUser(u.uid) }}">{{ u.uname }}</a>
+            <span class="uid-tag">#{{ u.uid }}</span>
+          </td>
+          <td class="size-cell">{{ u.sizeText }}</td>
+          <td class="count-cell">{{ u.count }} 个</td>
+          <td>
+            <div class="user-bar">
+              <div class="user-bar__track">
+                <div class="user-bar__fill" style="width: {{ u.percent }}%"></div>
+              </div>
+              <span class="user-bar__pct">{{ u.percent }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="manage-empty">暂无用户存储文件</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
