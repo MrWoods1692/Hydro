@@ -606,6 +606,7 @@ body
   border-bottom: 1px solid rgba(0, 0, 0, .06)
 
   // 移动端侧边栏使用灰色主题背景和深色文字
+  #menu.slideout-menu,
   &.slideout-menu
     background: #F0EFEB !important
     backdrop-filter: blur(6px) !important
@@ -615,7 +616,12 @@ body
 
     .nav__item,
     .nav__item--round,
-    .nav .dropdown-target.menu .menu__link
+    .nav .dropdown-target.menu .menu__link,
+    .nav__item:visited,
+    .nav__item:active,
+    a:visited,
+    a:active,
+    a:hover
       color: #3A3A38 !important
 
       &:hover,
