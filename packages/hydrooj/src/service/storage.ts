@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'path';
 import { PassThrough, Readable } from 'stream';
 import { URL } from 'url';
+import { Agent } from 'undici';
 import {
     DeleteObjectCommand, DeleteObjectsCommand, GetObjectCommand,
     HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client,
@@ -408,8 +409,15 @@ class WebDavStorageService {
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
     private static readonly CHUNK_SIZE = 900 * 1024; // 900KB per chunk (WebDAV limit ~1MB)
     private static readonly META_SUFFIX = '.chunks.json';
+    private static readonly dispatcher = new Agent({
+        connect: { rejectUnauthorized: false },
+    });
 
     constructor(private config: ReturnType<typeof FileSetting>) {
+    }
+
+    private async wfetch(url: string, init?: RequestInit): Promise<Response> {
+        return fetch(url, { ...init, dispatcher: WebDavStorageService.dispatcher } as any);
     }
 
     private resourceUrl(target: string) {
@@ -431,13 +439,13 @@ class WebDavStorageService {
             'Content-Type': meta['Content-Type'] || 'application/octet-stream',
         };
         const body = new Uint8Array(data);
-        const res = await fetch(this.resourceUrl(target), { method: 'PUT', headers, body });
+        const res = await this.wfetch(this.resourceUrl(target), { method: 'PUT', headers, body });
         if (!res.ok && res.status !== 201) throw new Error(`WebDAV PUT failed: HTTP ${res.status}`);
         await res.arrayBuffer();
     }
 
     private async deleteResource(target: string) {
-        const res = await fetch(this.resourceUrl(target), {
+        const res = await this.wfetch(this.resourceUrl(target), {
             method: 'DELETE',
             headers: { Authorization: this.authHeader },
         });
@@ -449,7 +457,7 @@ class WebDavStorageService {
         try {
             this.base = this.config.endPoint.replace(/\/+$/, '');
             this.authHeader = `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`;
-            const res = await fetch(`${this.base}/`, {
+            const res = await this.wfetch(`${this.base}/`, {
                 method: 'PROPFIND',
                 headers: { Depth: '1', Authorization: this.authHeader },
             });
@@ -499,7 +507,7 @@ class WebDavStorageService {
         target = convertPath(target);
 
         // Check if chunked file
-        const metaRes = await fetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
+        const metaRes = await this.wfetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
             method: 'GET',
             headers: { Authorization: this.authHeader },
         });
@@ -508,7 +516,7 @@ class WebDavStorageService {
             logger.info(`Merging ${info.totalChunks} chunks for ${target}`);
             let merged = Buffer.alloc(info.totalSize);
             for (let i = 0; i < info.totalChunks; i++) {
-                const chunkRes = await fetch(this.resourceUrl(`${target}.chunk${i}`), {
+                const chunkRes = await this.wfetch(this.resourceUrl(`${target}.chunk${i}`), {
                     method: 'GET',
                     headers: { Authorization: this.authHeader },
                 });
@@ -526,7 +534,7 @@ class WebDavStorageService {
         }
 
         // Single file
-        const res = await fetch(this.resourceUrl(target), {
+        const res = await this.wfetch(this.resourceUrl(target), {
             method: 'GET',
             headers: { Authorization: this.authHeader },
         });
@@ -554,7 +562,7 @@ class WebDavStorageService {
         const targets = (typeof target === 'string' ? [target] : target).map(convertPath);
         await Promise.all(targets.map(async (t) => {
             // Check if chunked
-            const metaRes = await fetch(this.resourceUrl(`${t}${WebDavStorageService.META_SUFFIX}`), {
+            const metaRes = await this.wfetch(this.resourceUrl(`${t}${WebDavStorageService.META_SUFFIX}`), {
                 method: 'GET',
                 headers: { Authorization: this.authHeader },
             });
@@ -573,7 +581,7 @@ class WebDavStorageService {
         target = convertPath(target);
 
         // Check if chunked file
-        const metaRes = await fetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
+        const metaRes = await this.wfetch(this.resourceUrl(`${target}${WebDavStorageService.META_SUFFIX}`), {
             method: 'GET',
             headers: { Authorization: this.authHeader },
         });
@@ -591,7 +599,7 @@ class WebDavStorageService {
         }
 
         // Single file
-        const res = await fetch(this.resourceUrl(target), {
+        const res = await this.wfetch(this.resourceUrl(target), {
             method: 'PROPFIND',
             headers: {
                 Depth: '0',
@@ -628,7 +636,7 @@ class WebDavStorageService {
         let current = '';
         for (const part of parts) {
             current = current ? `${current}/${part}` : part;
-            const res = await fetch(this.resourceUrl(`${current}/`), {
+            const res = await this.wfetch(this.resourceUrl(`${current}/`), {
                 method: 'MKCOL',
                 headers: { Authorization: this.authHeader },
             });
