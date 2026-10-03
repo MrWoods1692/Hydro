@@ -33,9 +33,50 @@ export class FilesHandler extends Handler {
 
     async get({ }) {
         if (!this.udoc._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
+        const files = sortFiles(this.udoc._files);
+        const unlimited = this.udoc.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA);
+        const totalQuota = system.get('limit.user_files_size');
+        const usedSize = Math.sum(files.map((i) => i.size));
+        const usedCount = files.length;
+        const totalFiles = system.get('limit.user_files');
+        // pre-format sizes and percentages server-side (Nunjucks has no size filter)
+        const fmt = (n: number) => {
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            if (n < 1024) return `${n} B`;
+            let i = 0;
+            let v = n / 1024;
+            while (v >= 1024 && i < units.length - 2) { v /= 1024; i += 1; }
+            return `${v.toFixed(v >= 100 ? 0 : 1)} ${units[i + 1]}`;
+        };
+        const maxTypeSize = Math.max(...files.map((i) => i.size), 1);
+        const byType: Record<string, { count: number; size: number }> = {};
+        for (const f of files) {
+            const ext = (f.name.includes('.') ? `.${f.name.split('.').pop()}` : 'unknown').toLowerCase();
+            byType[ext] = byType[ext] || { count: 0, size: 0 };
+            byType[ext].count += 1;
+            byType[ext].size += f.size;
+        }
         this.response.body = {
-            files: sortFiles(this.udoc._files),
+            files,
             urlForFile: (filename: string) => this.url('fs_download', { uid: this.udoc._id, filename }),
+            quota: {
+                unlimited,
+                total: totalQuota,
+                totalText: fmt(totalQuota),
+                used: usedSize,
+                usedText: fmt(usedSize),
+                remaining: unlimited ? 0 : Math.max(0, totalQuota - usedSize),
+                remainingText: fmt(unlimited ? 0 : Math.max(0, totalQuota - usedSize)),
+                count: usedCount,
+                maxCount: totalFiles,
+                percent: totalQuota > 0 ? Math.min(100, Math.round(usedSize / totalQuota * 1000) / 10) : 0,
+            },
+            typeDistribution: Object.entries(byType)
+                .map(([type, v]) => ({
+                    type, count: v.count, size: v.size, sizeText: fmt(v.size),
+                    percent: Math.min(100, Math.round(v.size / maxTypeSize * 100)),
+                }))
+                .sort((a, b) => b.size - a.size),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'home_files.html';

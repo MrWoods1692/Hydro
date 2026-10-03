@@ -67,6 +67,7 @@ const FileSetting = Schema.intersect([
         type: Schema.union([
             Schema.const('file').i18n({ en: 'Local Directory', zh: '本地目录' }),
             Schema.const('s3').description('S3'),
+            Schema.const('webdav').description('WebDAV'),
         ] as const).i18n({ en: 'Storage Provider Type', zh: '存储提供商类型' }),
         endPointForUser: Schema.string().default('/fs/'),
         endPointForJudge: Schema.string().default('/fs/'),
@@ -85,6 +86,13 @@ const FileSetting = Schema.intersect([
             bucket: Schema.string().default('hydro'),
             region: Schema.string().default('us-east-1'),
             pathStyle: Schema.boolean().default(true),
+        }),
+        Schema.object({
+            type: Schema.const('webdav').required(),
+            endPoint: Schema.string().description('WebDAV server URL, e.g. https://example.com/dav'),
+            username: Schema.string(),
+            password: Schema.string().role('secret'),
+            secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
         }),
     ] as const),
 ] as const);
@@ -388,9 +396,193 @@ class LocalStorageService {
 
 let service;
 
+/**
+ * WebDAV storage backend.
+ * Credentials are held only on the server side; downloads are proxied
+ * through the signed /storage route so browsers never need the password.
+ */
+class WebDavStorageService {
+    error = '';
+    private authHeader = '';
+    private base = '';
+    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+
+    constructor(private config: ReturnType<typeof FileSetting>) {
+    }
+
+    private resourceUrl(target: string) {
+        const base = this.base.endsWith('/') ? this.base : `${this.base}/`;
+        return `${base}${target.split('/').map(encodeURIComponent).join('/')}`;
+    }
+
+    async start() {
+        try {
+            this.base = this.config.endPoint.replace(/\/+$/, '');
+            this.authHeader = `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`;
+            const res = await fetch(`${this.base}/`, {
+                method: 'PROPFIND',
+                headers: { Depth: '1', Authorization: this.authHeader },
+            });
+            if (!res.ok) throw new Error(`WebDAV connectivity check failed: HTTP ${res.status}`);
+            await res.arrayBuffer();
+            logger.success('WebDAV storage connected.');
+            this.error = '';
+        } catch (e) {
+            logger.warn('WebDAV storage init fail. will retry later.');
+            if (process.env.DEV) logger.warn(e);
+            this.error = e.toString();
+            setTimeout(() => this.start(), 10000);
+        }
+        this.replaceWithAlternativeUrlFor = {
+            user: parseAlternativeEndpointUrl(this.config.endPointForUser),
+            judge: parseAlternativeEndpointUrl(this.config.endPointForJudge),
+        };
+    }
+
+    async put(target: string, file: string | Buffer | Readable, meta: Record<string, string> = {}) {
+        target = convertPath(target);
+        const dir = dirname(target);
+        if (dir && dir !== '.') await this.ensureDir(dir);
+        const body: Buffer | Readable = typeof file === 'string' ? createReadStream(file) : file;
+        const headers: Record<string, string> = {
+            Authorization: this.authHeader,
+            'Content-Type': meta['Content-Type'] || 'application/octet-stream',
+        };
+        const options: Record<string, unknown> = { method: 'PUT', headers, body };
+        if (!(body instanceof Buffer)) options.duplex = 'half';
+        const res = await fetch(this.resourceUrl(target), options as never);
+        if (!res.ok && res.status !== 201) throw new Error(`WebDAV PUT failed: HTTP ${res.status}`);
+        await res.arrayBuffer();
+    }
+
+    async get(target: string, path?: string) {
+        target = convertPath(target);
+        const res = await fetch(this.resourceUrl(target), {
+            method: 'GET',
+            headers: { Authorization: this.authHeader },
+        });
+        if (!res.ok) throw new Error(`WebDAV GET failed: HTTP ${res.status}`);
+        if (!res.body) throw new Error('WebDAV GET returned empty body');
+        const stream = Readable.fromWeb(res.body as never);
+        if (path) {
+            await new Promise((end, reject) => {
+                const writer = createWriteStream(path);
+                stream.on('error', reject);
+                stream.on('end', () => {
+                    writer.close();
+                    end(null);
+                });
+                stream.pipe(writer);
+            });
+            return null;
+        }
+        const p = new PassThrough();
+        stream.pipe(p);
+        return p;
+    }
+
+    async del(target: MaybeArray<string>) {
+        const targets = (typeof target === 'string' ? [target] : target).map(convertPath);
+        await Promise.all(targets.map(async (t) => {
+            const res = await fetch(this.resourceUrl(t), {
+                method: 'DELETE',
+                headers: { Authorization: this.authHeader },
+            });
+            if (!res.ok && res.status !== 404) throw new Error(`WebDAV DELETE failed: HTTP ${res.status}`);
+        }));
+    }
+
+    async getMeta(target: string) {
+        target = convertPath(target);
+        const res = await fetch(this.resourceUrl(target), {
+            method: 'PROPFIND',
+            headers: {
+                Depth: '0',
+                Authorization: this.authHeader,
+                'Content-Type': 'application/xml',
+            },
+            body: '<?xml version="1.0" encoding="UTF-8"?><D:propfind xmlns:D="DAV:"><D:prop>'
+                + '<D:getcontentlength/><D:getlastmodified/><D:etag/></D:prop></D:propfind>',
+        });
+        if (!res.ok) throw new Error(`WebDAV PROPFIND failed: HTTP ${res.status}`);
+        const xml = await res.text();
+        const num = (re: RegExp) => {
+            const m = xml.match(re);
+            return m ? Number(m[1]) : 0;
+        };
+        const size = num(/getcontentlength[^>]*>(\d+)/i) || num(/getcontentlength>\s*(\d+)/i);
+        const lm = xml.match(/getlastmodified[^>]*>([^<]+)</i);
+        const etag = xml.match(/<D:etag[^>]*>([^<]+)<\/D:etag>/i);
+        return {
+            size,
+            etag: etag?.[1] || Buffer.from(target).toString('base64'),
+            lastModified: lm ? new Date(lm[1]) : new Date(),
+            metaData: {
+                'Content-Type': (target.endsWith('.ans') || target.endsWith('.out'))
+                    ? 'text/plain'
+                    : lookup(target) || 'application/octet-stream',
+                'Content-Length': size,
+            },
+        };
+    }
+
+    private async ensureDir(dir: string) {
+        const parts = dir.split('/').filter(Boolean);
+        let current = '';
+        for (const part of parts) {
+            current = current ? `${current}/${part}` : part;
+            const res = await fetch(this.resourceUrl(`${current}/`), {
+                method: 'MKCOL',
+                headers: { Authorization: this.authHeader },
+            });
+            // 405 / 409 mean the collection already exists
+            if (res.status !== 201 && res.status !== 405 && res.status !== 409) {
+                logger.warn(`WebDAV MKCOL ${current}: HTTP ${res.status}`);
+            }
+            await res.arrayBuffer();
+        }
+    }
+
+    async signDownloadLink(target: string, filename = '', noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+        target = convertPath(target);
+        const url = new URL('https://localhost/storage');
+        url.searchParams.set('target', target);
+        if (filename) url.searchParams.set('filename', filename);
+        const expire = (Date.now() + (noExpire ? 7 * 24 * 3600 : 600) * 1000).toString();
+        url.searchParams.set('expire', expire);
+        url.searchParams.set('secret', md5(`${target}/${expire}/${this.config.secret}`));
+        // WebDAV downloads are served by the app's own signed /storage route,
+        // so the URL must NOT be rewritten to the /fs/ proxy endpoint.
+        return `/${url.toString().split('localhost/')[1]}`;
+    }
+
+    async isLinkValid(link: string) {
+        const parts = link.split('/');
+        const secret = parts.pop();
+        parts.push(this.config.secret);
+        const expected = md5(parts.join('/'));
+        return expected === secret;
+    }
+
+    async signUpload() {
+        throw new Error('Not implemented');
+    }
+
+    async status() {
+        return {
+            type: 'WebDAV',
+            status: !this.error,
+            error: this.error,
+            bucket: this.base,
+        };
+    }
+}
+
 export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>) {
     if (config.type === 's3') {
         service = new RemoteStorageService(config);
+    } else if (config.type === 'webdav') {
+        service = new WebDavStorageService(config);
     } else {
         service = new LocalStorageService(config);
     }
@@ -425,7 +617,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
 
 declare module 'cordis' {
     interface Context {
-        storage: RemoteStorageService | LocalStorageService;
+        storage: RemoteStorageService | LocalStorageService | WebDavStorageService;
     }
 }
 
@@ -434,5 +626,5 @@ const serviceProxy = new Proxy({}, {
     get(self, key) {
         return service[key];
     },
-}) as RemoteStorageService | LocalStorageService;
+}) as RemoteStorageService | LocalStorageService | WebDavStorageService;
 export default serviceProxy;

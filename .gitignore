@@ -43,6 +43,7 @@ packages/**/*.js
 # brand/startup scripts under data/ ARE tracked.
 data/file/
 data/*.log
+data/.webdav.cred
 !**/bin/*.js
 !*.page.js
 !packages/register/index.js
