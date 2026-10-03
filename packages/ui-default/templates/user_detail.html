@@ -75,18 +75,34 @@
   }
   .section__tab-container.immersive .section__tab-item .section__tab-title {
     padding: 0 18px !important;
-    color: rgba(255, 255, 255, 0.88) !important;
+    color: rgba(58, 58, 56, 0.65) !important;
     transition: color .2s ease !important;
   }
   .section__tab-container.immersive .section__tab-item:hover .section__tab-title {
-    color: #FFF !important;
+    color: #3A3A38 !important;
   }
   .section__tab-container.immersive .section__tab-item.selected {
     background: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
   }
   .section__tab-container.immersive .section__tab-item.selected .section__tab-title {
     color: #3A3A38 !important;
     font-weight: 600;
+  }
+
+  /* 暗色主题标签 */
+  html.theme--dark .section__tab-container.immersive .section__tab-item .section__tab-title {
+    color: rgba(232, 228, 220, 0.65) !important;
+  }
+  html.theme--dark .section__tab-container.immersive .section__tab-item:hover .section__tab-title {
+    color: #E8E6E2 !important;
+  }
+  html.theme--dark .section__tab-container.immersive .section__tab-item.selected {
+    background: #E8E6E2 !important;
+    box-shadow: none !important;
+  }
+  html.theme--dark .section__tab-container.immersive .section__tab-item.selected .section__tab-title {
+    color: #2A2A28 !important;
   }
 
   /* ===== 侧栏统计卡片 ===== */
