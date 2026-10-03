@@ -627,6 +627,19 @@ body
       color: #FFF !important
       border-color: #FFF !important
 
+  // 顶部导航栏（非侧边栏）移动端：保持深色文字
+  &:not(.slideout-menu) .nav__item,
+  &:not(.slideout-menu) .nav__item--round,
+  &:not(.slideout-menu) .nav .dropdown-target.menu .menu__link
+    color: #3A3A38 !important
+
+    &:hover,
+    &:visited,
+    &:active
+      color: #3A3A38 !important
+      background: none !important
+      border-color: transparent !important
+
 .main
   position: relative
   z-index: 1
