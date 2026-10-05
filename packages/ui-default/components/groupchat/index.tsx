@@ -18,7 +18,6 @@ export default function App({ WebSocket }) {
   const [isPosting, setIsPosting] = useState(false);
   const [showMutedList, setShowMutedList] = useState(false);
   const [mutedUsers, setMutedUsers] = useState({});
-  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const contentRef = useRef({});
   const inputRef = useRef({});
@@ -139,31 +138,22 @@ export default function App({ WebSocket }) {
       <div className="messagepad__sidebar">
         <div className="section__header messagepad__search">
           <span style={{ fontWeight: 700, fontSize: '15px', color: '#3A3A38', flex: 1 }}>群聊</span>
-          <button
-            className="messagepad__toggle"
-            onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? '展开' : '收起'}
-          >
-            <i className="material-icons" style={{ fontSize: '18px' }}>{collapsed ? 'chevron_right' : 'chevron_left'}</i>
-          </button>
         </div>
-        {!collapsed && (
-          <ol className="messagepad__list" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
-            {GROUPS.map((g) => (
-              <div
-                key={g.id}
-                className="messagepad__user-item"
-                onClick={() => selectGroup(g)}
-              >
-                <span style={{ fontSize: '24px', flexShrink: 0 }}>{g.icon}</span>
-                <div className="messagepad__user-meta">
-                  <div className="messagepad__username">{g.name}</div>
-                  <div className="messagepad__desc">{g.desc}</div>
-                </div>
+        <ol className="messagepad__list" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+          {GROUPS.map((g) => (
+            <div
+              key={g.id}
+              className="messagepad__user-item"
+              onClick={() => selectGroup(g)}
+            >
+              <span style={{ fontSize: '24px', flexShrink: 0 }}>{g.icon}</span>
+              <div className="messagepad__user-meta">
+                <div className="messagepad__username">{g.name}</div>
+                <div className="messagepad__desc">{g.desc}</div>
               </div>
-            ))}
-          </ol>
-        )}
+            </div>
+          ))}
+        </ol>
       </div>
     );
   }
@@ -172,7 +162,7 @@ export default function App({ WebSocket }) {
     if (!activeGroup) {
       return (
         <div style={{
-          position: 'absolute', left: collapsed ? '48px' : '260px', right: 0, top: 0, bottom: 0,
+          position: 'absolute', left: '260px', right: 0, top: 0, bottom: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: '#9A9690', fontSize: '14px',
         }}>
@@ -279,11 +269,11 @@ export default function App({ WebSocket }) {
         </ol>
 
         {muted_ ? (
-          <div style={{ position: 'absolute', left: collapsed ? '48px' : '260px', right: 0, bottom: 0, height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF8', borderTop: '1px solid #E8E6E2', color: '#9A9690', fontSize: '14px' }}>
+          <div style={{ position: 'absolute', left: '260px', right: 0, bottom: 0, height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF8', borderTop: '1px solid #E8E6E2', color: '#9A9690', fontSize: '14px' }}>
             你已被禁言，无法发送消息
           </div>
         ) : (
-          <div className="messagepad__input" style={{ display: 'block', left: collapsed ? '48px' : '260px' }}>
+          <div className="messagepad__input" style={{ display: 'block', left: '260px' }}>
             <div className="messagepad__textarea-container">
               <textarea
                 ref={(ref) => { inputRef.current[activeGroup] = ref; }}
@@ -304,10 +294,8 @@ export default function App({ WebSocket }) {
     );
   }
 
-  const sidebarWidth = collapsed ? 48 : 260;
-
   return (
-    <div className="messagepad clearfix" style={isMobile() ? {} : {}}>
+    <div className="messagepad clearfix">
       {renderSidebar()}
       {renderContent()}
     </div>
