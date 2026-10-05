@@ -88,6 +88,7 @@ export async function initPageLoader() {
   };
   for (const { page, func, type } of loadSequence) {
     const ts = Date.now();
+    console.log('[bootstrap] start', page.name, type);
     try {
       await func(currentPageName, loadPage(1, type));
     } catch (e) {
@@ -100,6 +101,7 @@ export async function initPageLoader() {
       console.time(`${page.name}: ${type}Loading`);
     }
     const time = Date.now() - ts;
+    console.log('[bootstrap] end', page.name, type, time + 'ms');
     if ((process.env.NODE_ENV !== 'production' && time > 16) || time > 256) {
       console.log(`${page.name}: ${type}Loading took ${time}ms`);
     }
