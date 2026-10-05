@@ -83,15 +83,23 @@ export async function apply(ctx: Context) {
     });
     // 签到功能
     await require('../../../checkin').apply(ctx);
-    // 在线人数：每 30s 统计 5 分钟内在线的访客数（opcount 存在记录），写入系统设置供页脚展示。
+    // 在线人数：每 30s 统计 5 分钟内在线的登录用户数（与 /online 名单同一数据源），写入系统设置供页脚展示。
     ctx.interval(async () => {
         try {
             const online: number = await new Promise((resolve) => {
                 ctx.inject(['db'], ({ db }) => resolve(
-                    db.collection('opcount').distinct('ident', { op: 'user_online' })
-                        .then((idents: string[]) => [
-                            ...new Set(idents.map(Number).filter((n) => Number.isSafeInteger(n) && n > 1)),
-                        ].length),
+                    db.collection('opcount')
+                        .find({ op: 'user_online' })
+                        .project({ ident: 1, _id: 0 })
+                        .toArray()
+                        .then((docs: { ident: string }[]) => {
+                            const uids: number[] = [];
+                            for (const d of docs) {
+                                const n = Number(d.ident);
+                                if (Number.isSafeInteger(n) && n > 1 && !uids.includes(n)) uids.push(n);
+                            }
+                            return uids.length;
+                        }),
                 ));
             });
             await SystemModel.set('ui.onlineCount', online);

@@ -106,10 +106,21 @@
 (function () {
   var badge = document.getElementById('online-badge');
   if (!badge) return;
+  var countEl = badge.querySelector('b');
+  // 用 /online 列表的真实人数同步徽章数字，确保数字与点开列表完全一致
+  function refresh() {
+    return fetch('/online').then(function (r) { return r.json(); }).then(function (data) {
+      var list = data.online || [];
+      if (countEl) countEl.textContent = String(list.length);
+      return list;
+    }).catch(function () { return null; });
+  }
+  refresh();
+  setInterval(refresh, 60 * 1000);
   badge.addEventListener('click', function () {
-    fetch('/online').then(function (r) { return r.json(); }).then(function (data) {
-      show(data.online || []);
-    }).catch(function () { });
+    refresh().then(function (list) {
+      if (list) show(list);
+    });
   });
   function show(list) {
     close();
