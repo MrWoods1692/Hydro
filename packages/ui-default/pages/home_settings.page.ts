@@ -6,7 +6,10 @@ import {
 } from 'vj/utils';
 
 export default new NamedPage('home_account', () => {
-  document.getElementsByName('avatar')[0].parentNode.parentNode.parentElement.remove();
+  const $avatar = document.getElementsByName('avatar')[0];
+  if ($avatar && $avatar.parentNode && $avatar.parentNode.parentElement) {
+    $avatar.parentNode.parentElement.remove();
+  }
   const $type = $(tpl`
     <select id="type" class="select">
       <option value="gravatar">${i18n('Gravatar')}</option>
