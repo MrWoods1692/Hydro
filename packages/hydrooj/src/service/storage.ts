@@ -694,7 +694,7 @@ class StorageToStorageService {
     private static readonly dispatcher = new Agent({
         connect: { rejectUnauthorized: false },
     });
-    private files: Map<string, { url: string; raw_url?: string }> = new Map();
+    private files: Map<string, { url: string; raw_url?: string; size: number; contentType: string; etag: string }> = new Map();
 
     constructor(private config: ReturnType<typeof FileSetting>) {
     }
@@ -767,35 +767,64 @@ class StorageToStorageService {
         if (!confirmData.success) throw new Error(`storage.to confirm failed: ${JSON.stringify(confirmData)}`);
 
         const fileUrl = confirmData.file.url;
-        this.files.set(target, { url: fileUrl });
-        logger.info(`Uploaded ${target} -> ${fileUrl}`);
+        const etag = confirmData.file.id || target;
+        this.files.set(target, { url: fileUrl, size, contentType, etag });
+        logger.info(`Uploaded ${target} -> ${fileUrl} (${size} bytes)`);
         return fileUrl;
     }
 
-    async get(target: string, options?: { stream?: Readable, buffer?: boolean }): Promise<string | Readable> {
+    async getMeta(target: string): Promise<{ metaData: Record<string, string>, size: number, etag: string }> {
         target = convertPath(target);
         const entry = this.files.get(target);
         if (!entry) {
             logger.warn(`storage.to file not found: ${target}`);
-            return `https://storage.to/${target}`;
+            return { metaData: {}, size: 0, etag: '' };
+        }
+        return {
+            metaData: { 'Content-Type': entry.contentType, 'Content-Length': String(entry.size) },
+            size: entry.size,
+            etag: entry.etag,
+        };
+    }
+
+    async get(target: string, options?: { stream?: Readable, buffer?: boolean }): Promise<string | Readable> {
+        target = convertPath(target);
+        // If target is a storage.to URL, fetch it directly
+        if (target.startsWith('https://storage.to/')) {
+            if (options?.buffer) {
+                const res = await fetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                return Buffer.from(await res.arrayBuffer()) as any;
+            }
+            if (options?.stream) {
+                const res = await fetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                return Readable.fromWeb(res.body as any);
+            }
+            return target;
+        }
+        const entry = this.files.get(target);
+        if (!entry) {
+            logger.warn(`storage.to file not found: ${target}`);
+            return target;
         }
         if (options?.buffer) {
-            const res = await fetch(entry.url, {
-                dispatcher: StorageToStorageService.dispatcher,
-            } as any);
-            const buf = Buffer.from(await res.arrayBuffer());
-            return buf as any;
+            const res = await fetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
+            return Buffer.from(await res.arrayBuffer()) as any;
         }
         if (options?.stream) {
-            const res = await fetch(entry.url, {
-                dispatcher: StorageToStorageService.dispatcher,
-            } as any);
+            const res = await fetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
             return Readable.fromWeb(res.body as any);
         }
         return entry.url;
     }
 
     async sign(target: string, options?: { filename?: string, noExpire?: boolean }): Promise<string> {
+        target = convertPath(target);
+        const entry = this.files.get(target);
+        if (entry) return entry.url;
+        return `https://storage.to/${target}`;
+    }
+
+    async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         target = convertPath(target);
         const entry = this.files.get(target);
         if (entry) return entry.url;

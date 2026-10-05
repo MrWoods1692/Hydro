@@ -19,17 +19,18 @@ export class StorageModel {
     }
 
     static async put(path: string, file: string | Buffer | Readable, owner?: number) {
-        const meta = {};
+        const meta = {} as Record<string, string>;
         await StorageModel.del([path]);
         meta['Content-Type'] = mime(path);
         let _id = StorageModel.generateId(extname(path));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(path));
-        await storage.put(_id, file, meta);
+        const uploadResult = await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
+            ...(uploadResult && uploadResult !== _id ? { link: uploadResult } : {}),
         });
         return path;
     }
