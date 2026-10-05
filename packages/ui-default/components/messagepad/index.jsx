@@ -104,6 +104,13 @@ const MessagePadContainer = ({ onAdd, activeId, clearActive }) => {
         </div>
         {!collapsed && (
         <ol className="messagepad__list" style={{ overscrollBehavior: 'contain' }}>
+          <li style={{ padding: '10px 14px', borderBottom: '1px solid #F0EFEB', background: 'linear-gradient(135deg, #FAFAF8 0%, #F0EFEB 100%)' }}>
+            <a href="/group" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3A3A38', textDecoration: 'none', fontWeight: 600 }}>
+              <span style={{ fontSize: '20px' }}>💬</span>
+              <span>群聊</span>
+              <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9A9690' }}>交流群 · 水群</span>
+            </a>
+          </li>
           {loading
             ? <li className="messagepad__list__status">{i18n('Loading...')}</li>
             : error
