@@ -34,6 +34,9 @@ export class FilesHandler extends Handler {
     async get({ }) {
         if (!this.udoc._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
         const files = sortFiles(this.udoc._files);
+        this.response.addHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        this.response.addHeader('Pragma', 'no-cache');
+        this.response.addHeader('Expires', '0');
         const unlimited = this.udoc.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA);
         const totalQuota = system.get('limit.user_files_size');
         const usedSize = Math.sum(files.map((i) => i.size));
