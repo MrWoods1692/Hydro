@@ -87,11 +87,13 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = 'ui-resources-cache-v12';
+const PRECACHE = 'ui-resources-cache-v13';
 const DO_NOT_PRECACHE = [
   '.worker.js', 'fonts', 'favicon', 'apple-touch-icon', 'android-chrome', 'nav-logo',
   // 体积大的库按需加载，不要预缓存拖慢首次访问
   '.chunk.js', 'sentry.js',
+  // manifest.json 是 chunk 清单，必须永远拿最新（缓存旧版会导致加载已删除的 chunk）
+  'manifest.json',
 ];
 
 function shouldCachePath(path: string) {
@@ -150,6 +152,10 @@ self.addEventListener('activate', (event) => {
   const valid = [PRECACHE, 'assets'];
   caches.keys().then((names) => names
     .filter((name) => !valid.includes(name))
+    .map((p) => caches.delete(p)));
+  // 强制清掉所有旧版本 ui-resources-cache，确保下次一定从网络拿最新文件
+  caches.keys().then((names) => names
+    .filter((name) => name.startsWith('ui-resources-cache-') && name !== PRECACHE)
     .map((p) => caches.delete(p)));
   caches.delete('ui-resources-cache');
 });
