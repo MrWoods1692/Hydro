@@ -24,6 +24,15 @@ export default function App({ WebSocket }) {
 
   const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
 
+  // 按 _id 去重追加消息：HTTP 响应和 WebSocket 广播会重复推送同一条消息
+  function appendMessage(list: any[], mdoc: any) {
+    const arr = list || [];
+    if (mdoc._id && arr.some((m: any) => m._id && m._id.toString() === mdoc._id.toString())) {
+      return arr;
+    }
+    return [...arr, mdoc];
+  }
+
   function loadGroup(groupId) {
     if (messages[groupId]) return;
     setLoading(prev => ({ ...prev, [groupId]: true }));
@@ -62,10 +71,13 @@ export default function App({ WebSocket }) {
         const msg = JSON.parse(event.data);
         if (msg.operation !== 'event' || !msg.payload) return;
         const mdoc = msg.payload.mdoc || msg.payload;
-        if (!mdoc.group) return;
+        if (!mdoc.group || !mdoc._id) return;
         const gid = mdoc.group;
         if (messages[gid] !== undefined) {
-          setMessages(prev => ({ ...prev, [gid]: [...prev[gid], mdoc] }));
+          setMessages(prev => ({
+            ...prev,
+            [gid]: appendMessage(prev[gid], mdoc),
+          }));
         }
         if (gid === activeGroup) setTimeout(scrollBottom, 50);
       };
@@ -84,7 +96,11 @@ export default function App({ WebSocket }) {
         content: val,
       });
       if (res.mdoc) {
-        setMessages(prev => ({ ...prev, [activeGroup]: [...(prev[activeGroup] || []), res.mdoc] }));
+        const gid = activeGroup as string;
+        setMessages(prev => ({
+          ...prev,
+          [gid]: appendMessage(prev[gid], res.mdoc),
+        }));
         setTimeout(scrollBottom, 50);
       }
     } catch (e) {
