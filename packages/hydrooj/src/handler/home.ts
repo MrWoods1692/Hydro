@@ -603,9 +603,7 @@ class HomeMessagesHandler extends Handler {
         if (!groupDoc) throw new ValidationError();
         // Add all users to group automatically
         const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
-        for (const u of users) {
-            await message.addGroupMember(group, u._id);
-        }
+        await message.addGroupMembers(group, users.map((u: any) => u._id));
         const muted = await message.isMuted(group, this.user._id);
         const messages = await message.getGroupMessages(group, 200);
         const udict = await user.getList('system', messages.map((m) => m.from));
@@ -688,9 +686,7 @@ export class HomeGroupsHandler extends Handler {
             if (!groupDoc) throw new ValidationError();
             // Auto-add all users
             const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
-            for (const u of users) {
-                await message.addGroupMember(group, u._id);
-            }
+            await message.addGroupMembers(group, users.map((u: any) => u._id));
             const muted = await message.isMuted(group, this.user._id);
             const msgs = await message.getGroupMessages(group, 200);
             const udict = await user.getList('system', msgs.map((m) => m.from));
@@ -715,9 +711,7 @@ export class HomeGroupsHandler extends Handler {
         const groups = await message.getGroups();
         const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
         for (const g of groups) {
-            for (const u of users) {
-                await message.addGroupMember(g._id, u._id);
-            }
+            await message.addGroupMembers(g._id, users.map((u: any) => u._id));
         }
         this.response.body = { groups, memberCount: users.length };
         this.response.template = 'home_groups.html';

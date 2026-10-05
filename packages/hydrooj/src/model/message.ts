@@ -17,6 +17,7 @@ class MessageModel {
 
     static coll = db.collection('message');
     static groupColl = db.collection('message_group' as any) as any;
+    static groupMemberColl = db.collection('message_group_member' as any) as any;
     static muteColl = db.collection('message_mute' as any) as any;
 
     @ArgMethod
@@ -74,8 +75,9 @@ class MessageModel {
         };
         await MessageModel.coll.insertOne(mdoc);
         // Notify all non-muted users in the group (excluding sender)
-        const members = await MessageModel.groupColl.find({ _id: group, uid: { $ne: null } }).toArray();
-        const uids = members.map((m: any) => m.uid).filter((u: number) => u !== from);
+        const members = await MessageModel.groupMemberColl.find({ group }).project({ uid: 1, _id: 0 }).toArray();
+        const muted = new Set((await MessageModel.getMutedUsers(group)).map((m: any) => m.uid));
+        const uids = members.map((m: any) => m.uid).filter((u: number) => u !== from && !muted.has(u));
         bus.broadcast('user/message', uids, mdoc as any);
         return mdoc;
     }
@@ -109,17 +111,22 @@ class MessageModel {
     }
 
     static async getGroupMembers(group: string) {
-        return await MessageModel.groupColl.find({ _id: group, uid: { $ne: null } }).project({ uid: 1 }).toArray();
+        return await MessageModel.groupMemberColl.find({ group }).project({ uid: 1, _id: 0 }).toArray();
     }
 
     static async addGroupMember(group: string, uid: number) {
-        await MessageModel.groupColl.updateOne(
-            { _id: group, uid }, { $setOnInsert: { _id: group, uid, joinedAt: new Date() } }, { upsert: true },
+        await MessageModel.groupMemberColl.updateOne(
+            { group, uid }, { $setOnInsert: { group, uid, joinedAt: new Date() } }, { upsert: true },
         );
     }
 
+    static async addGroupMembers(group: string, uids: number[]) {
+        if (!uids.length) return;
+        await Promise.all(uids.map((uid) => MessageModel.addGroupMember(group, uid)));
+    }
+
     static async delGroupMember(group: string, uid: number) {
-        await MessageModel.groupColl.deleteOne({ _id: group, uid });
+        await MessageModel.groupMemberColl.deleteOne({ group, uid });
     }
 
     static async sendNotification(message: string, ...args: any[]) {
@@ -139,10 +146,10 @@ export async function apply() {
         { key: { from: 1, _id: -1 }, name: 'from' },
         { key: { group: 1, _id: -1 }, name: 'group' },
     );
-    await db.ensureIndexes(MessageModel.groupColl, { key: { _id: 1, uid: 1 }, name: 'group_member', unique: true });
+    await db.ensureIndexes(MessageModel.groupMemberColl, { key: { group: 1, uid: 1 }, name: 'group_member', unique: true });
     await db.ensureIndexes(MessageModel.muteColl, { key: { group: 1, uid: 1 }, name: 'mute', unique: true });
 
-    // Seed default groups if not exist
+    // Seed default groups if not exist (only when the group definitions collection is empty)
     const existing = await MessageModel.groupColl.countDocuments({});
     if (existing === 0) {
         await MessageModel.groupColl.insertMany([
