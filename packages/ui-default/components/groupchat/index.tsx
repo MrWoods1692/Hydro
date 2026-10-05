@@ -79,9 +79,10 @@ export default function App({ WebSocket }) {
     setIsPosting(true);
     setInput(prev => ({ ...prev, [activeGroup]: '' }));
     try {
-      const res = await request.post('/group/send', {
-        content: val,
+      const res = await request.post('', {
+        operation: 'send',
         group: activeGroup,
+        content: val,
       });
       if (res.mdoc) {
         setMessages(prev => ({ ...prev, [activeGroup]: [...(prev[activeGroup] || []), res.mdoc] }));
@@ -96,7 +97,7 @@ export default function App({ WebSocket }) {
 
   async function deleteMessage(msgId) {
     try {
-      await request.post('/group/delete', { messageId: msgId });
+      await request.post('', { operation: 'deleteMessage', messageId: msgId });
       setMessages(prev => ({
         ...prev,
         [activeGroup]: (prev[activeGroup] || []).filter(m => m._id.toString() !== msgId.toString()),
@@ -109,9 +110,9 @@ export default function App({ WebSocket }) {
   async function toggleMute(uid, uname) {
     try {
       if (muted[activeGroup]) {
-        await request.post('/group/unmute', { uid, group: activeGroup });
+        await request.post('', { operation: 'unmuteUser', uid, group: activeGroup });
       } else {
-        await request.post('/group/mute', { uid, group: activeGroup });
+        await request.post('', { operation: 'muteUser', uid, group: activeGroup });
       }
       Notification.info(`已${muted[activeGroup] ? '解除' : '禁言'} ${uname}`);
       loadGroup(activeGroup);
@@ -222,7 +223,7 @@ export default function App({ WebSocket }) {
                 <button
                   onClick={async () => {
                     try {
-                      await request.post('/group/unmute', { uid: u.uid, group: activeGroup });
+                      await request.post('', { operation: 'unmuteUser', uid: u.uid, group: activeGroup });
                       const newMuted = (mutedUsers[activeGroup] || []).filter(x => x.uid !== u.uid);
                       setMutedUsers(prev => ({ ...prev, [activeGroup]: newMuted }));
                       Notification.info('已解除禁言');
