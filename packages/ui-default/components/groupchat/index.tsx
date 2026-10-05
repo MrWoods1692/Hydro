@@ -35,13 +35,19 @@ function avatarBg(uid) {
 
 // 消息头像组件：有头像用图，否则显示首字母
 function Avatar({ url, uname, uid, size = 40 }) {
-  if (url) {
+  const [failed, setFailed] = useState(false);
+  if (url && !failed) {
     return (
       <img
         src={url}
         width={size}
         height={size}
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', background: '#E8E6E2', flexShrink: 0 }}
+        alt=""
+        style={{
+          width: size, height: size, borderRadius: '50%', objectFit: 'cover',
+          background: avatarBg(uid), flexShrink: 0,
+        }}
+        onError={() => setFailed(true)}
       />
     );
   }
@@ -51,7 +57,8 @@ function Avatar({ url, uname, uid, size = 40 }) {
       style={{
         width: size, height: size, borderRadius: '50%', background: avatarBg(uid),
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#FFFFFF', fontSize: size * 0.4, fontWeight: 600, flexShrink: 0,
+        color: '#FFFFFF', fontSize: size * 0.42, fontWeight: 600, flexShrink: 0,
+        border: '2px solid #FFFFFF',
       }}
     >
       {ch}
@@ -426,66 +433,118 @@ export default function App({ WebSocket }) {
     const avatarUrl = isSelf ? currentAvatar : fromUser.avatarUrl;
     const mutedOn = muted[activeGroup];
 
-    const header = (
+    const isAdminTarget = adminOn && msg.from !== 1 && !isSelf;
+
+    // 用户名 + 时间：放在气泡外，QQ/Discord 风格
+    const meta = (
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px',
-        opacity: isSelf ? 0.75 : 1,
+        display: 'flex', alignItems: 'center', gap: '8px',
+        marginBottom: '5px', padding: '0 2px',
       }}>
         <span style={{
-          fontWeight: 600, fontSize: '13px',
-          color: isSelf ? 'rgba(255,255,255,0.9)' : C.text2,
+          fontSize: '13px', fontWeight: 600, color: C.text2,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          {isSelf ? '我' : uname}
+          {uname}
         </span>
-        {adminOn && msg.from !== 1 && !isSelf && (
-          <button onClick={() => toggleMute(msg.from, uname)} style={isSelf ? muteBtnSelfStyle : muteBtnStyle} title={mutedOn ? '解除禁言' : '禁言'}>
-            {mutedOn ? '🔊 解除' : '🔇 禁言'}
-          </button>
-        )}
-        {adminOn && (
-          <button onClick={() => deleteMessage(msg._id)} style={delBtnSelfStyle} title="删除">
-            🗑
-          </button>
-        )}
-      </div>
-    );
-
-    const bubble = (
-      <div style={{
-        maxWidth: '72%',
-        background: isSelf ? C.bubbleSelf : C.bubbleOther,
-        color: isSelf ? C.bubbleSelfText : C.text,
-        padding: '10px 14px',
-        borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-        boxShadow: isSelf ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
-        wordBreak: 'break-word',
-        lineHeight: 1.5,
-        fontSize: '14px',
-      }}>
-        {header}
-        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.content}</div>
-        <time style={{
-          opacity: 0.55, fontSize: '11px', marginTop: '6px',
-          display: 'inline-block', textAlign: 'right',
-          color: isSelf ? 'rgba(255,255,255,0.7)' : C.text3,
-        }}>
+        <time style={{ fontSize: '12px', color: C.text3, opacity: 0.85 }}>
           {shortTime(msg._id)}
         </time>
       </div>
     );
 
+    // 气泡主体
+    const bubble = (
+      <div style={{
+        position: 'relative',
+        maxWidth: '72%',
+        background: isSelf
+          ? 'linear-gradient(135deg, #766F69 0%, #5A5450 100%)'
+          : '#FFFFFF',
+        color: isSelf ? '#FFFFFF' : C.text,
+        padding: '10px 14px',
+        borderRadius: isSelf ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+        boxShadow: isSelf
+          ? '0 2px 6px rgba(106,101,96,0.25)'
+          : '0 1px 3px rgba(0,0,0,0.06)',
+        wordBreak: 'break-word',
+        lineHeight: 1.55,
+        fontSize: '14.5px',
+        transition: 'box-shadow 0.2s',
+      }}>
+        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.content}</div>
+      </div>
+    );
+
+    // admin 操作按钮（悬停显示）
+    const actions = (isAdminTarget || adminOn) && (
+      <div style={{
+        display: 'flex', gap: '4px', marginTop: '4px',
+        opacity: 0, transition: 'opacity 0.15s',
+      }}
+        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+        onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+      >
+        {isAdminTarget && (
+          <button
+            onClick={() => toggleMute(msg.from, uname)}
+            style={{
+              border: `1px solid ${C.border}`,
+              background: '#FFFFFF', color: C.text2,
+              borderRadius: '7px', padding: '2px 8px',
+              fontSize: '11px', cursor: 'pointer', lineHeight: '1.6',
+            }}
+            title={mutedOn ? '解除禁言' : '禁言'}
+          >
+            {mutedOn ? '🔊 解除禁言' : '🔇 禁言'}
+          </button>
+        )}
+        {adminOn && (
+          <button
+            onClick={() => deleteMessage(msg._id)}
+            style={{
+              border: '1px solid #ECD5D5',
+              background: '#FBF1F1', color: '#B59B9B',
+              borderRadius: '7px', padding: '2px 8px',
+              fontSize: '11px', cursor: 'pointer', lineHeight: '1.6',
+            }}
+            title="删除"
+          >
+            🗑 删除
+          </button>
+        )}
+      </div>
+    );
+
+    // 自己的消息：靠右，头像在右
     if (isSelf) {
       return (
-        <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-          {bubble}
+        <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
+          <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              marginBottom: '5px', padding: '0 2px',
+            }}>
+              <time style={{ fontSize: '12px', color: C.text3, opacity: 0.85 }}>
+                {shortTime(msg._id)}
+              </time>
+            </div>
+            {bubble}
+            {actions}
+          </div>
+          <Avatar url={avatarUrl} uname="我" uid={currentUid} size={38} />
         </div>
       );
     }
+
+    // 别人的消息：靠左，头像在左
     return (
-      <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-        <Avatar url={avatarUrl} uname={uname} uid={msg.from} />
+      <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
+        <Avatar url={avatarUrl} uname={uname} uid={msg.from} size={38} />
         <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column' }}>
+          {meta}
           {bubble}
+          {actions}
         </div>
       </div>
     );
