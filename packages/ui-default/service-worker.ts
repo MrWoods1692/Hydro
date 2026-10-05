@@ -87,7 +87,7 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = 'ui-resources-cache-v2';
+const PRECACHE = 'ui-resources-cache-v3';
 const DO_NOT_PRECACHE = ['.worker.js', 'fonts', 'favicon', 'apple-touch-icon', 'android-chrome', 'nav-logo'];
 
 function shouldCachePath(path: string) {
