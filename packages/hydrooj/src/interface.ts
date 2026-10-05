@@ -321,9 +321,11 @@ export interface DomainDoc extends Record<string, any> {
 // Message
 export interface MessageDoc {
     from: number;
-    to: number | number[];
+    to: number | number[] | null;
     content: string;
     flag: number;
+    group?: string;
+    fromUser?: { _id: number, uname: string, displayName?: string, avatarUrl?: string, muted?: boolean };
 }
 
 // Blacklist

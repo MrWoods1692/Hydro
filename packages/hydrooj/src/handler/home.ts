@@ -7,8 +7,8 @@ import { Binary, ObjectId } from 'mongodb';
 import { UAParser } from 'ua-parser-js';
 import { Context } from '../context';
 import {
-    AuthOperationError, BadRequestError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
-    NotFoundError, PermissionError, UserAlreadyExistError,
+    AccessDeniedError, AuthOperationError, BadRequestError, BlacklistedError, DomainAlreadyExistsError,
+    InvalidTokenError, NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
 import { DomainDoc, Setting } from '../interface';
@@ -596,6 +596,166 @@ class HomeMessagesHandler extends Handler {
         else throw new PermissionError();
         this.back();
     }
+
+    @param('group', Types.String)
+    async getGroupData({ }, group: string) {
+        const groupDoc = await message.groupColl.findOne({ _id: group });
+        if (!groupDoc) throw new ValidationError();
+        // Add all users to group automatically
+        const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
+        for (const u of users) {
+            await message.addGroupMember(group, u._id);
+        }
+        const muted = await message.isMuted(group, this.user._id);
+        const messages = await message.getGroupMessages(group, 200);
+        const udict = await user.getList('system', messages.map((m) => m.from));
+        for (const m of messages) {
+            const ud = udict[m.from];
+            m.fromUser = ud ? { _id: ud._id, uname: ud.uname, displayName: ud.displayName, avatarUrl: avatar(ud.avatar) } : null;
+        }
+        this.response.body = {
+            group: groupDoc, messages, muted,
+            isAdmin: this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM),
+            memberCount: users.length,
+        };
+        this.response.addHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
+    @param('group', Types.String)
+    @param('content', Types.String)
+    @param('before', Types.ObjectId, true)
+    async postGroupSend({ }, group: string, content: string, before?: ObjectId) {
+        const groupDoc = await message.groupColl.findOne({ _id: group });
+        if (!groupDoc) throw new ValidationError();
+        this.checkPriv(PRIV.PRIV_SEND_MESSAGE);
+        if (before) {
+            const msgs = await message.getGroupMessages(group, 100, before);
+            const udict = await user.getList('system', msgs.map((m) => m.from));
+            for (const m of msgs) {
+                const ud = udict[m.from];
+                m.fromUser = ud ? { _id: ud._id, uname: ud.uname, displayName: ud.displayName, avatarUrl: avatar(ud.avatar) } : null;
+            }
+            this.back({ messages: msgs });
+            return;
+        }
+        if (!content?.trim()) throw new ValidationError();
+        if (await message.isMuted(group, this.user._id)) throw new AccessDeniedError();
+        const fromUser = { _id: this.user._id, uname: this.user.uname, displayName: this.user.displayName, avatarUrl: this.user.avatarUrl };
+        const mdoc = await message.sendGroup(group, this.user._id, content.trim(), fromUser);
+        this.back({ mdoc });
+    }
+
+    @param('messageId', Types.ObjectId)
+    async postGroupDeleteMessage({ }, messageId: ObjectId) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.del(messageId);
+        this.back();
+    }
+
+    @param('uid', Types.Int)
+    @param('group', Types.String)
+    async postGroupMuteUser({ }, uid: number, group: string) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.muteUser(group, uid, this.user._id);
+        this.back();
+    }
+
+    @param('uid', Types.Int)
+    @param('group', Types.String)
+    async postGroupUnmuteUser({ }, uid: number, group: string) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.unmuteUser(group, uid);
+        this.back();
+    }
+
+    @param('group', Types.String)
+    async getMutedList({ }, group: string) {
+        const mutedList = await message.getMutedUsers(group);
+        const udict = await user.getList('system', mutedList.map((m: any) => m.uid));
+        const result = mutedList.map((m: any) => {
+            const ud = udict[m.uid];
+            return { uid: m.uid, uname: ud?.uname || '', displayName: ud?.displayName || '' };
+        });
+        this.back({ mutedList: result });
+    }
+}
+
+export class HomeGroupsHandler extends Handler {
+    @param('group', Types.String, true)
+    async get({ }, group?: string) {
+        if (group) {
+            const groupDoc = await message.groupColl.findOne({ _id: group });
+            if (!groupDoc) throw new ValidationError();
+            // Auto-add all users
+            const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
+            for (const u of users) {
+                await message.addGroupMember(group, u._id);
+            }
+            const muted = await message.isMuted(group, this.user._id);
+            const msgs = await message.getGroupMessages(group, 200);
+            const udict = await user.getList('system', msgs.map((m) => m.from));
+            for (const m of msgs) {
+                const ud = udict[m.from];
+                m.fromUser = ud ? { _id: ud._id, uname: ud.uname, displayName: ud.displayName, avatarUrl: avatar(ud.avatar) } : null;
+            }
+            const mutedList = await message.getMutedUsers(group);
+            const mutedUdict = await user.getList('system', mutedList.map((m: any) => m.uid));
+            const mutedResult = mutedList.map((m: any) => {
+                const ud = mutedUdict[m.uid];
+                return { uid: m.uid, uname: ud?.uname || '', displayName: ud?.displayName || '' };
+            });
+            this.back({
+                group: groupDoc, messages: msgs, muted,
+                isAdmin: this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM),
+                memberCount: users.length,
+                mutedList: mutedResult,
+            });
+            return;
+        }
+        const groups = await message.getGroups();
+        const users = await user.getMulti().project({ _id: 1, uname: 1, displayName: 1, avatar: 1, priv: 1, banned: 1 }).toArray();
+        for (const g of groups) {
+            for (const u of users) {
+                await message.addGroupMember(g._id, u._id);
+            }
+        }
+        this.response.body = { groups, memberCount: users.length };
+        this.response.template = 'home_groups.html';
+    }
+
+    @param('group', Types.String)
+    @param('content', Types.String)
+    async postSend({ }, group: string, content: string) {
+        this.checkPriv(PRIV.PRIV_SEND_MESSAGE);
+        if (!content?.trim()) throw new ValidationError();
+        if (await message.isMuted(group, this.user._id)) throw new AccessDeniedError();
+        const fromUser = { _id: this.user._id, uname: this.user.uname, displayName: this.user.displayName, avatarUrl: this.user.avatarUrl };
+        const mdoc = await message.sendGroup(group, this.user._id, content.trim(), fromUser);
+        this.back({ mdoc });
+    }
+
+    @param('messageId', Types.ObjectId)
+    async postDeleteMessage({ }, messageId: ObjectId) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.del(messageId);
+        this.back();
+    }
+
+    @param('uid', Types.Int)
+    @param('group', Types.String)
+    async postMuteUser({ }, uid: number, group: string) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.muteUser(group, uid, this.user._id);
+        this.back();
+    }
+
+    @param('uid', Types.Int)
+    @param('group', Types.String)
+    async postUnmuteUser({ }, uid: number, group: string) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await message.unmuteUser(group, uid);
+        this.back();
+    }
 }
 
 export const inject = ['oauth'];
@@ -607,6 +767,7 @@ export function apply(ctx: Context) {
     ctx.Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
     ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_groups', '/group', HomeGroupsHandler, PRIV.PRIV_USER_PROFILE);
 
     async function notifyMessage(uid: number[], mdoc: any, h) {
         const udoc = (await user.getById('system', mdoc.from))!;
@@ -625,10 +786,21 @@ export function apply(ctx: Context) {
     });
 
     ctx.on('subscription/enable', (channel, h, privileged) => {
+        if (channel === 'groupchat' && !privileged) {
+            h.ctx.on('user/message', async (uids, mdoc) => {
+                if (!mdoc.group) return;
+                h.send({
+                    operation: 'event',
+                    channels: ['groupchat'],
+                    payload: { ...mdoc, udoc: mdoc.fromUser || {} },
+                });
+            });
+            return;
+        }
         if (!channel.startsWith('message:') || privileged) return;
         const uid = +channel.split(':')[1];
         h.ctx.on('user/message', async (uids, mdoc) => {
-            if (!uids.includes(uid)) return;
+            if (!uids.includes(uid) || mdoc.group) return;
             h.send(await notifyMessage([uid], mdoc, h));
         });
     });
@@ -638,6 +810,12 @@ export function apply(ctx: Context) {
             return {
                 ok: true,
                 channel: `message:${udoc._id}`,
+            };
+        }
+        if (channel === 'groupchat' && udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+            return {
+                ok: true,
+                channel: 'groupchat',
             };
         }
     });
