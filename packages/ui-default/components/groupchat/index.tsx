@@ -435,25 +435,29 @@ export default function App({ WebSocket }) {
 
     const isAdminTarget = adminOn && msg.from !== 1 && !isSelf;
 
-    // 用户名 + 时间：放在气泡外，QQ/Discord 风格
+    // 用户名 + 时间：放在气泡内部顶部
     const meta = (
       <div style={{
         display: 'flex', alignItems: 'center', gap: '8px',
-        marginBottom: '5px', padding: '0 2px',
+        marginBottom: '4px',
       }}>
         <span style={{
-          fontSize: '13px', fontWeight: 600, color: C.text2,
+          fontSize: '13px', fontWeight: 600,
+          color: isSelf ? 'rgba(255,255,255,0.85)' : C.text2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {uname}
         </span>
-        <time style={{ fontSize: '12px', color: C.text3, opacity: 0.85 }}>
+        <time style={{
+          fontSize: '12px',
+          color: isSelf ? 'rgba(255,255,255,0.7)' : C.text3,
+        }}>
           {shortTime(msg._id)}
         </time>
       </div>
     );
 
-    // 气泡主体
+    // 气泡主体（包含用户名/时间头部）
     const bubble = (
       <div style={{
         position: 'relative',
@@ -473,6 +477,7 @@ export default function App({ WebSocket }) {
         fontSize: '14.5px',
         transition: 'box-shadow 0.2s',
       }}>
+        {meta}
         <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.content}</div>
       </div>
     );
@@ -517,19 +522,11 @@ export default function App({ WebSocket }) {
       </div>
     );
 
-    // 自己的消息：靠右，头像在右
+    // 自己的消息：靠右，头像在右，气泡顶部与头像齐平
     if (isSelf) {
       return (
-        <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
+        <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: '10px', marginBottom: '14px' }}>
           <div style={{ width: 'fit-content', maxWidth: '70%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              marginBottom: '5px', padding: '0 2px',
-            }}>
-              <time style={{ fontSize: '12px', color: C.text3, opacity: 0.85 }}>
-                {shortTime(msg._id)}
-              </time>
-            </div>
             {bubble}
             {actions}
           </div>
@@ -538,12 +535,11 @@ export default function App({ WebSocket }) {
       );
     }
 
-    // 别人的消息：靠左，头像在左
+    // 别人的消息：靠左，头像在左，气泡顶部与头像齐平
     return (
-      <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
+      <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '10px', marginBottom: '14px' }}>
         <Avatar url={avatarUrl} uname={uname} uid={msg.from} size={38} />
         <div style={{ width: 'fit-content', maxWidth: '70%', display: 'flex', flexDirection: 'column' }}>
-          {meta}
           {bubble}
           {actions}
         </div>
