@@ -48,7 +48,7 @@
       }
       .share-card__btn--primary:hover { box-shadow: 0 3px 12px rgba(58,58,56,0.25); }
       .share-card__btn--copy { padding: 8px 10px; }
-      .share-card__copied { color: #2E7D32 !important; }
+      .share-card__btn--copy.share-card__copied { background: #E8F5E9; color: #2E7D32; border-color: #C8E6C9; }
       @media (max-width: 640px) {
         .share-card { flex-wrap: wrap; }
         .share-card__actions { width: 100%; }
@@ -76,7 +76,7 @@
             </div>
           </div>
           <div class="share-card__actions">
-            <button class="share-card__btn share-card__btn--copy" onclick="navigator.clipboard.writeText('{{ file.shareUrl }}').then(()=>{this.classList.add('share-card__copied');this.innerHTML='已复制';setTimeout(()=>{this.classList.remove('share-card__copied');this.innerHTML='<svg width=12 height=12 viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1&quot;/></svg> 复制'&quot;&quot;&quot;},2000)})">
+            <button class="share-card__btn share-card__btn--copy" data-url="{{ file.shareUrl }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制
             </button>
             <a class="share-card__btn share-card__btn--primary" href="{{ urlForFile(file.name, filetype) }}">
@@ -86,6 +86,22 @@
         </div>
       {% endfor %}
     </div>
+    <script>
+      document.querySelectorAll('.share-card__btn--copy').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var url = this.getAttribute('data-url');
+          var self = this;
+          navigator.clipboard.writeText(url).then(function() {
+            self.classList.add('share-card__copied');
+            self.innerHTML = '\u2713 \u5df2\u590d\u5236';
+            setTimeout(function() {
+              self.classList.remove('share-card__copied');
+              self.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> \u590d\u5236';
+            }, 2000);
+          });
+        });
+      });
+    </script>
   {% else %}
     {{ nothing.render('暂无文件', compact=true) }}
   {% endif %}
