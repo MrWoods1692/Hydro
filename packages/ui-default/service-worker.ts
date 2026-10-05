@@ -87,7 +87,7 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = 'ui-resources-cache-v4';
+const PRECACHE = 'ui-resources-cache-v5';
 const DO_NOT_PRECACHE = [
   '.worker.js', 'fonts', 'favicon', 'apple-touch-icon', 'android-chrome', 'nav-logo',
   // 体积大的库按需加载，不要预缓存拖慢首次访问
