@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'path';
 import { PassThrough, Readable } from 'stream';
 import { URL } from 'url';
-import { Agent } from 'undici';
+import { Agent, fetch as undiciFetch } from 'undici';
 import {
     DeleteObjectCommand, DeleteObjectsCommand, GetObjectCommand,
     HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client,
@@ -706,7 +706,7 @@ class StorageToStorageService {
     }
 
     private async api(path: string, init?: RequestInit) {
-        return fetch(`${this.apiBase}${path}`, {
+        return undiciFetch(`${this.apiBase}${path}`, {
             ...init,
             headers: {
                 Authorization: `Bearer ${this.token}`,
@@ -738,7 +738,7 @@ class StorageToStorageService {
             method: 'POST',
             body: JSON.stringify({ filename, content_type: contentType, size }),
         });
-        const initData = await initRes.json();
+        const initData = await initRes.json() as any;
         if (!initData.success) throw new Error(`storage.to init failed: ${JSON.stringify(initData)}`);
 
         const uploadUrl = initData.upload_url;
@@ -750,7 +750,7 @@ class StorageToStorageService {
         for (const [k, v] of Object.entries(r2Headers)) {
             if (Array.isArray(v)) r2HeadersObj[k] = v[0];
         }
-        const putRes = await fetch(uploadUrl, {
+        const putRes = await undiciFetch(uploadUrl, {
             method: 'PUT',
             body: buf as unknown as ReadableStream,
             headers: r2HeadersObj,
@@ -763,7 +763,7 @@ class StorageToStorageService {
             method: 'POST',
             body: JSON.stringify({ r2_key: r2Key, filename, content_type: contentType, size }),
         });
-        const confirmData = await confirmRes.json();
+        const confirmData = await confirmRes.json() as any;
         if (!confirmData.success) throw new Error(`storage.to confirm failed: ${JSON.stringify(confirmData)}`);
 
         const fileUrl = confirmData.file.url;
@@ -792,11 +792,11 @@ class StorageToStorageService {
         // If target is a storage.to URL, fetch it directly
         if (target.startsWith('https://storage.to/')) {
             if (options?.buffer) {
-                const res = await fetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                const res = await undiciFetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
                 return Buffer.from(await res.arrayBuffer()) as any;
             }
             if (options?.stream) {
-                const res = await fetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                const res = await undiciFetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
                 return Readable.fromWeb(res.body as any);
             }
             return target;
@@ -807,11 +807,11 @@ class StorageToStorageService {
             return target;
         }
         if (options?.buffer) {
-            const res = await fetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
+            const res = await undiciFetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
             return Buffer.from(await res.arrayBuffer()) as any;
         }
         if (options?.stream) {
-            const res = await fetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
+            const res = await undiciFetch(entry.url, { dispatcher: StorageToStorageService.dispatcher } as any);
             return Readable.fromWeb(res.body as any);
         }
         return entry.url;
