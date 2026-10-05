@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Notification from 'vj/components/notification';
 import { request } from 'vj/utils';
-import { ctx } from 'vj/context';
 
 const GROUPS = [
   { id: 'chat', name: '交流群', desc: '技术讨论与学习交流', icon: '💬' },
@@ -79,15 +79,16 @@ export default function App({ WebSocket }) {
     setIsPosting(true);
     setInput(prev => ({ ...prev, [activeGroup]: '' }));
     try {
-      const res = await request.post(`/group/send/${activeGroup}`, {
+      const res = await request.post('/group/send', {
         content: val,
+        group: activeGroup,
       });
       if (res.mdoc) {
         setMessages(prev => ({ ...prev, [activeGroup]: [...(prev[activeGroup] || []), res.mdoc] }));
         setTimeout(scrollBottom, 50);
       }
     } catch (e) {
-      ctx.notification.error(e.message || '发送失败');
+      Notification.error(e.message || '发送失败');
     } finally {
       setIsPosting(false);
     }
@@ -95,27 +96,27 @@ export default function App({ WebSocket }) {
 
   async function deleteMessage(msgId) {
     try {
-      await request.post(`/group/delete`, { messageId: msgId });
+      await request.post('/group/delete', { messageId: msgId });
       setMessages(prev => ({
         ...prev,
         [activeGroup]: (prev[activeGroup] || []).filter(m => m._id.toString() !== msgId.toString()),
       }));
     } catch (e) {
-      ctx.notification.error(e.message || '删除失败');
+      Notification.error(e.message || '删除失败');
     }
   }
 
   async function toggleMute(uid, uname) {
     try {
       if (muted[activeGroup]) {
-        await request.post(`/group/unmute`, { uid, group: activeGroup });
+        await request.post('/group/unmute', { uid, group: activeGroup });
       } else {
-        await request.post(`/group/mute`, { uid, group: activeGroup });
+        await request.post('/group/mute', { uid, group: activeGroup });
       }
-      ctx.notification.info(`已${muted[activeGroup] ? '解除' : '禁言'} ${uname}`);
+      Notification.info(`已${muted[activeGroup] ? '解除' : '禁言'} ${uname}`);
       loadGroup(activeGroup);
     } catch (e) {
-      ctx.notification.error(e.message || '操作失败');
+      Notification.error(e.message || '操作失败');
     }
   }
 
@@ -221,11 +222,11 @@ export default function App({ WebSocket }) {
                 <button
                   onClick={async () => {
                     try {
-                      await request.post(`/group/unmute`, { uid: u.uid, group: activeGroup });
+                      await request.post('/group/unmute', { uid: u.uid, group: activeGroup });
                       const newMuted = (mutedUsers[activeGroup] || []).filter(x => x.uid !== u.uid);
                       setMutedUsers(prev => ({ ...prev, [activeGroup]: newMuted }));
-                      ctx.notification.info('已解除禁言');
-                    } catch (e) { ctx.notification.error('操作失败'); }
+                      Notification.info('已解除禁言');
+                    } catch (e) { Notification.error('操作失败'); }
                   }}
                   style={muteBtnStyle}
                 >
