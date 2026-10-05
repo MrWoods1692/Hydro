@@ -457,7 +457,8 @@ export default function App({ WebSocket }) {
     const bubble = (
       <div style={{
         position: 'relative',
-        maxWidth: '72%',
+        width: 'fit-content',
+        maxWidth: '100%',
         background: isSelf
           ? 'linear-gradient(135deg, #766F69 0%, #5A5450 100%)'
           : '#FFFFFF',
@@ -520,7 +521,7 @@ export default function App({ WebSocket }) {
     if (isSelf) {
       return (
         <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
-          <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ width: 'fit-content', maxWidth: '70%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: '8px',
               marginBottom: '5px', padding: '0 2px',
@@ -541,7 +542,7 @@ export default function App({ WebSocket }) {
     return (
       <div key={msg._id} style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', gap: '10px', marginBottom: '14px' }}>
         <Avatar url={avatarUrl} uname={uname} uid={msg.from} size={38} />
-        <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: 'fit-content', maxWidth: '70%', display: 'flex', flexDirection: 'column' }}>
           {meta}
           {bubble}
           {actions}
