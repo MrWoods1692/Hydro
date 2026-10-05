@@ -88,7 +88,14 @@ export default function App({ WebSocket }) {
   const currentUid = (typeof UserContext !== 'undefined' ? UserContext._id : null);
   const currentAvatar = (typeof UserContext !== 'undefined' ? UserContext.avatarUrl : null);
 
-  const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 767px)').matches();
+  const isMobile = () => {
+    try {
+      if (typeof window.matchMedia !== 'function') return false;
+      return !!(window.matchMedia('(max-width: 767px)').matches);
+    } catch (e) {
+      return false;
+    }
+  };
 
   // 按 _id 去重追加消息：HTTP 响应和 WebSocket 广播会重复推送同一条消息
   function appendMessage(list, mdoc) {
