@@ -112,7 +112,6 @@
           <span class="checkin-userinfo">
             <img class="checkin-userinfo__avatar" src="{{ handler.user.avatarUrl }}" alt="{{ handler.user.uname }}">
             <span class="checkin-userinfo__name">{{ handler.user.uname }}</span>
-            <span class="checkin-userinfo__meta">UID <b>{{ handler.user._id }}</b>{% if handler.user.qq %}<span class="checkin-userinfo__sep">·</span>QQ <b>{{ handler.user.qq }}</b>{% endif %}</span>
           </span>
           {% endif %}
           {% if checked %}
