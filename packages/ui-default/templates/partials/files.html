@@ -4,48 +4,88 @@
 {%- endmacro %}
 <div class="section__body no-padding files" {% if filetype %}data-type="{{ filetype }}"{% endif %} data-fragment-id="files{% if filetype %}-{{ filetype }}{% endif %}">
   {% if files.length %}
-    <table class="data-table">
-      <colgroup>
-        {% if not sidebar %}<col class="col--checkbox">{% endif %}
-        <col class="col--name">
-        <col class="col--size">
-        <col class="col--operation">
-      </colgroup>
-      <thead>
-        <tr>
-          {% if not sidebar %}
-          <th class="col--checkbox">
-            <label class="compact checkbox">
-              <input type="checkbox" name="select_all" data-checkbox-toggle="{{ filetype|default('files') }}">
-            </label>
-          </th>
-          {% endif %}
-          <th class="col--name">{{ _('文件名') }}</th>
-          <th class="col--size">{{ _('大小') }}</th>
-          <th class="col--operation"><span class="icon icon-wrench"></span></th>
-        </tr>
-      </thead>
-      <tbody>
-        {%- for file in files -%}
-        <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
-          {% if not sidebar %}
-          <td class="col--checkbox">
-            <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="{{ filetype|default('files') }}" data-checkbox-range>
-            </label>
-          </td>
-          {% endif %}
-          <td class="col--name" data-preview>
-            <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
-          </td>
-          <td class="col--size">{{ sz(file.size) }}</td>
-          <td class="col--operation">
-            <a href="{{ urlForFile(file.name, filetype) }}" class="icon icon-download"></a>
-          </td>
-        </tr>
-        {%- endfor -%}
-      </tbody>
-    </table>
+    <style>
+      .share-list { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0; }
+      .share-card {
+        display: flex; align-items: center; gap: 16px;
+        background: linear-gradient(135deg, #FFFFFF, #FAFAF7);
+        border: 1px solid #E8E6E2; border-radius: 14px;
+        padding: 18px 22px; transition: box-shadow .2s, transform .15s;
+      }
+      .share-card:hover { box-shadow: 0 4px 20px rgba(58,58,56,0.1); transform: translateY(-1px); }
+      .share-card__icon {
+        flex: 0 0 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #F0EFEB, #E8E6E2);
+        font-size: 18px; color: #6A6560;
+      }
+      .share-card__body { flex: 1; min-width: 0; }
+      .share-card__name {
+        font-size: 14px; font-weight: 700; color: #3A3A38;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-bottom: 4px;
+      }
+      .share-card__name a { color: inherit; text-decoration: none; }
+      .share-card__name a:hover { color: #6A6560; text-decoration: underline; }
+      .share-card__meta { font-size: 12px; color: #9A9690; display: flex; gap: 14px; flex-wrap: wrap; }
+      .share-card__expiry {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+      }
+      .share-card__expiry--ok { background: #E8F5E9; color: #2E7D32; }
+      .share-card__expiry--soon { background: #FFF3E0; color: #E65100; }
+      .share-card__expiry--expired { background: #FBE9E7; color: #C62828; }
+      .share-card__actions { flex: 0 0 auto; display: flex; gap: 6px; }
+      .share-card__btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+        padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+        text-decoration: none; border: 1px solid #E8E6E2;
+        background: #F7F7F5; color: #3A3A38; transition: all .15s;
+      }
+      .share-card__btn:hover { background: #6A6560; color: #FFF; border-color: #6A6560; }
+      .share-card__btn--primary {
+        background: linear-gradient(135deg, #6A6560, #3A3A38); color: #FFF; border: none;
+      }
+      .share-card__btn--primary:hover { box-shadow: 0 3px 12px rgba(58,58,56,0.25); }
+      .share-card__btn--copy { padding: 8px 10px; }
+      .share-card__copied { color: #2E7D32 !important; }
+      @media (max-width: 640px) {
+        .share-card { flex-wrap: wrap; }
+        .share-card__actions { width: 100%; }
+        .share-card__actions .share-card__btn { flex: 1; justify-content: center; }
+      }
+    </style>
+    <div class="share-list">
+      {% for file in files %}
+        <div class="share-card" data-filename="{{ file.name }}">
+          <div class="share-card__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div class="share-card__body">
+            <div class="share-card__name">
+              <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
+            </div>
+            <div class="share-card__meta">
+              <span>{{ sz(file.size) }}</span>
+              {% if file.expiresAtText %}
+                <span class="share-card__expiry {{ 'share-card__expiry--soon' if file.expiresAtText|length < 12 else 'share-card__expiry--ok' }}">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  剩余 {{ file.expiresAtText }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="share-card__actions">
+            <button class="share-card__btn share-card__btn--copy" onclick="navigator.clipboard.writeText('{{ file.shareUrl }}').then(()=>{this.classList.add('share-card__copied');this.innerHTML='已复制';setTimeout(()=>{this.classList.remove('share-card__copied');this.innerHTML='<svg width=12 height=12 viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1&quot;/></svg> 复制'&quot;&quot;&quot;},2000)})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制
+            </button>
+            <a class="share-card__btn share-card__btn--primary" href="{{ urlForFile(file.name, filetype) }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下载
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
   {% else %}
     {{ nothing.render('暂无文件', compact=true) }}
   {% endif %}

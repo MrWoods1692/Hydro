@@ -27,10 +27,11 @@ export class StorageModel {
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(path));
         const uploadResult = await storage.put(_id, file, meta);
-        const { metaData, size, etag } = await storage.getMeta(_id);
+        const { metaData, size, etag, expiresAt } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
             ...(uploadResult && uploadResult !== _id ? { link: uploadResult } : {}),
+            ...(expiresAt ? { expiresAt } : {}),
         });
         return path;
     }
@@ -113,6 +114,8 @@ export class StorageModel {
             size: value.size,
             lastModified: value.lastModified,
             etag: value.etag,
+            link: value.link,
+            expiresAt: value.expiresAt,
         };
     }
 
@@ -121,6 +124,8 @@ export class StorageModel {
             { path: target, autoDelete: null },
             { $set: { lastUsage: new Date() } },
         );
+        // If the storage backend uses external URLs, return them directly
+        if (res?.link) return res.link;
         return await storage.signDownloadLink(res?.link || res?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 

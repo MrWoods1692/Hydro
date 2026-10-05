@@ -39,44 +39,34 @@ export class FilesHandler extends Handler {
         const usedSize = Math.sum(files.map((i) => i.size));
         const usedCount = files.length;
         const totalFiles = system.get('limit.user_files');
-        // pre-format sizes and percentages server-side (Nunjucks has no size filter)
-        const fmt = (n: number) => {
-            const units = ['字节', 'KB', 'MB', 'GB', 'TB'];
-            if (n < 1024) return `${n} 字节`;
-            let i = 0;
-            let v = n / 1024;
-            while (v >= 1024 && i < units.length - 2) { v /= 1024; i += 1; }
-            return `${v.toFixed(v >= 100 ? 0 : 1)} ${units[i + 1]}`;
-        };
-        const maxTypeSize = Math.max(...files.map((i) => i.size), 1);
-        const byType: Record<string, { count: number; size: number }> = {};
-        for (const f of files) {
-            const ext = (f.name.includes('.') ? `.${f.name.split('.').pop()}` : 'unknown').toLowerCase();
-            byType[ext] = byType[ext] || { count: 0, size: 0 };
-            byType[ext].count += 1;
-            byType[ext].size += f.size;
-        }
+        // Enrich files with shareUrl and expiresAt from storage
+        const enrichedFiles = await Promise.all(files.map(async (f) => {
+            const target = `user/${this.udoc._id}/${f.name}`;
+            const meta = await storage.getMeta(target);
+            const expiresAt = meta?.expiresAt;
+            let expiresAtText = '';
+            if (expiresAt) {
+                const expires = new Date(expiresAt);
+                const now = new Date();
+                const diff = expires.getTime() - now.getTime();
+                if (diff > 0) {
+                    const days = Math.floor(diff / 86400000);
+                    const hours = Math.floor((diff % 86400000) / 3600000);
+                    expiresAtText = days > 0 ? `${days} 天 ${hours} 小时` : `${hours} 小时`;
+                } else {
+                    expiresAtText = '已过期';
+                }
+            }
+            return {
+                ...f,
+                shareUrl: meta?.link || '',
+                expiresAt: expiresAt || '',
+                expiresAtText,
+            };
+        }));
         this.response.body = {
-            files,
+            files: enrichedFiles,
             urlForFile: (filename: string) => this.url('fs_download', { uid: this.udoc._id, filename }),
-            quota: {
-                unlimited,
-                total: totalQuota,
-                totalText: fmt(totalQuota),
-                used: usedSize,
-                usedText: fmt(usedSize),
-                remaining: unlimited ? 0 : Math.max(0, totalQuota - usedSize),
-                remainingText: fmt(unlimited ? 0 : Math.max(0, totalQuota - usedSize)),
-                count: usedCount,
-                maxCount: totalFiles,
-                percent: totalQuota > 0 ? Math.min(100, Math.round(usedSize / totalQuota * 1000) / 10) : 0,
-            },
-            typeDistribution: Object.entries(byType)
-                .map(([type, v]) => ({
-                    type, count: v.count, size: v.size, sizeText: fmt(v.size),
-                    percent: Math.min(100, Math.round(v.size / maxTypeSize * 100)),
-                }))
-                .sort((a, b) => b.size - a.size),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'home_files.html';

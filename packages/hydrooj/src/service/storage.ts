@@ -694,7 +694,7 @@ class StorageToStorageService {
     private static readonly dispatcher = new Agent({
         connect: { rejectUnauthorized: false },
     });
-    private files: Map<string, { url: string; raw_url?: string; size: number; contentType: string; etag: string }> = new Map();
+    private files: Map<string, { url: string; raw_url?: string; size: number; contentType: string; etag: string; expiresAt?: string }> = new Map();
 
     constructor(private config: ReturnType<typeof FileSetting>) {
     }
@@ -768,12 +768,16 @@ class StorageToStorageService {
 
         const fileUrl = confirmData.file.url;
         const etag = confirmData.file.id || target;
-        this.files.set(target, { url: fileUrl, size, contentType, etag });
-        logger.info(`Uploaded ${target} -> ${fileUrl} (${size} bytes)`);
+        const expiresAt = confirmData.file.expires_at;
+        this.files.set(target, { url: fileUrl, size, contentType, etag, expiresAt });
+        logger.info(`Uploaded ${target} -> ${fileUrl} (${size} bytes, expires ${expiresAt})`);
         return fileUrl;
     }
 
-    async getMeta(target: string): Promise<{ metaData: Record<string, string>, size: number, etag: string }> {
+    async getMeta(target: string): Promise<{ metaData: Record<string, string>, size: number, etag: string, expiresAt?: string }> {
+        if (target.startsWith('https://storage.to/')) {
+            return { metaData: {}, size: 0, etag: target, expiresAt: undefined };
+        }
         target = convertPath(target);
         const entry = this.files.get(target);
         if (!entry) {
@@ -784,6 +788,7 @@ class StorageToStorageService {
             metaData: { 'Content-Type': entry.contentType, 'Content-Length': String(entry.size) },
             size: entry.size,
             etag: entry.etag,
+            expiresAt: entry.expiresAt,
         };
     }
 
@@ -825,6 +830,7 @@ class StorageToStorageService {
     }
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+        if (target.startsWith('https://storage.to/')) return target;
         target = convertPath(target);
         const entry = this.files.get(target);
         if (entry) return entry.url;
