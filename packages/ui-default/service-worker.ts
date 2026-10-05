@@ -87,8 +87,12 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = 'ui-resources-cache-v3';
-const DO_NOT_PRECACHE = ['.worker.js', 'fonts', 'favicon', 'apple-touch-icon', 'android-chrome', 'nav-logo'];
+const PRECACHE = 'ui-resources-cache-v4';
+const DO_NOT_PRECACHE = [
+  '.worker.js', 'fonts', 'favicon', 'apple-touch-icon', 'android-chrome', 'nav-logo',
+  // 体积大的库按需加载，不要预缓存拖慢首次访问
+  '.chunk.js', 'sentry.js',
+];
 
 function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;
