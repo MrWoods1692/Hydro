@@ -265,23 +265,22 @@
     btn.addEventListener('click', function () {
       btn.classList.add('checkin-btn--loading');
       btn.textContent = '⏳ 签到中…';
-      fetch('/checkin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
+      fetch('/checkin', { method: 'POST', headers: { 'content-type': 'application/json', 'accept': 'application/json' }, body: '{}' })
         .then(function (r) {
-          if (r.redirected) {
-            showToast('请先登录后再签到');
+          if (!r.ok) {
+            showToast('签到失败，请稍后再试');
             btn.classList.remove('checkin-btn--loading');
-            btn.textContent = '✋ 点击签到';
+            btn.textContent = '\u270B \u70B9\u51FB\u7B7E\u5230';
             return null;
           }
-          return r.text().then(function (t) {
-            try { return JSON.parse(t); }
-            catch (e) {
-              showToast('签到失败，请稍后再试');
-              btn.classList.remove('checkin-btn--loading');
-              btn.textContent = '✋ 点击签到';
-              return null;
-            }
-          });
+          var ct = r.headers.get('content-type') || '';
+          if (ct.indexOf('json') === -1) {
+            showToast('请先登录后再签到');
+            btn.classList.remove('checkin-btn--loading');
+            btn.textContent = '\u270B \u70B9\u51FB\u7B7E\u5230';
+            return null;
+          }
+          return r.json().then(function (res) { return res; });
         })
         .then(function (res) {
           if (!res) return;
