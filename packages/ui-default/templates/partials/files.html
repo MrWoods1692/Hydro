@@ -94,6 +94,20 @@
           navigator.clipboard.writeText(url).then(function() {
             self.classList.add('share-card__copied');
             self.innerHTML = '\u2713 \u5df2\u590d\u5236';
+            // Show toast
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#3A3A38;color:#fff;padding:10px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;';
+            toast.innerHTML = '\u2713 \u5206\u4eab\u94fe\u63a5\u5df2\u590d\u5236';
+            document.body.appendChild(toast);
+            requestAnimationFrame(function() {
+              toast.style.opacity = '1';
+              toast.style.transform = 'translateX(-50%) translateY(0)';
+            });
+            setTimeout(function() {
+              toast.style.opacity = '0';
+              toast.style.transform = 'translateX(-50%) translateY(12px)';
+              setTimeout(function() { toast.remove(); }, 300);
+            }, 2000);
             setTimeout(function() {
               self.classList.remove('share-card__copied');
               self.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> \u590d\u5236';
