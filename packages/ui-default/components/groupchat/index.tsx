@@ -368,7 +368,7 @@ export default function App({ WebSocket }) {
 
         <ol
           ref={(ref) => { contentRef.current[activeGroup] = ref; }}
-          style={{ flex: 1, overflow: 'auto', listStyle: 'none', margin: 0, padding: '16px', background: C.msgBg }}
+          style={{ position: 'relative', flex: 1, overflow: 'auto', listStyle: 'none', margin: 0, padding: '16px', background: C.msgBg }}
         >
           {loading_ ? (
             <div style={{ textAlign: 'center', padding: '40px', color: C.text3 }}>加载中...</div>
@@ -572,6 +572,7 @@ const sidebarHeadStyle = {
   padding: '18px 18px 12px',
 };
 const headerStyle = {
+  position: 'relative',
   height: '56px',
   display: 'flex',
   alignItems: 'center',
