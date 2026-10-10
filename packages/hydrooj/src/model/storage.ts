@@ -7,7 +7,7 @@ import { Context } from '../context';
 import { FileNode } from '../interface';
 import mime from '../lib/mime';
 import db from '../service/db';
-import storage from '../service/storage';
+import storage, { LOCAL_ONLY_PREFIXES, localBackend } from '../service/storage';
 import ScheduleModel from './schedule';
 import system from './system';
 
@@ -26,8 +26,12 @@ export class StorageModel {
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(path));
-        const uploadResult = await storage.put(_id, file, meta);
-        const { metaData, size, etag, expiresAt } = await storage.getMeta(_id);
+        // 评测要读的文件（题目评测数据、提交代码）强制走本地磁盘：storage.to 的分享
+        // 链接在评测机侧会被 Cloudflare 挡成 403，判题会直接失败。
+        const judgeLocal = LOCAL_ONLY_PREFIXES.some((prefix) => path.startsWith(prefix)) ? localBackend() : null;
+        const backend = judgeLocal || storage;
+        const uploadResult = await backend.put(_id, file, meta);
+        const { metaData, size, etag, expiresAt } = await backend.getMeta(_id) as any;
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
             ...(uploadResult && uploadResult !== _id ? { link: uploadResult } : {}),

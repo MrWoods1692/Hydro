@@ -405,6 +405,20 @@ class LocalStorageService {
 let service;
 
 /**
+ * 评测要读的路径（题目评测数据 + 提交代码）必须留在本地磁盘：
+ * storage.to 的分享链接在服务端/评测机侧会被 Cloudflare 挑战挡掉（403），
+ * 交给评测就直接判不了题。其余路径（用户上传等）走当前存储后端。
+ */
+export const LOCAL_ONLY_PREFIXES = ['problem/', 'submission/'];
+
+/** 当前配置下的本地磁盘后端；没有（webdav/s3/storage_to 未配 legacyPath）时返回 null。 */
+export function localBackend(): LocalStorageService | null {
+    if (service instanceof LocalStorageService) return service;
+    if (service instanceof StorageToStorageService) return service.legacyBackend;
+    return null;
+}
+
+/**
  * WebDAV storage backend.
  * Credentials are held only on the server side; downloads are proxied
  * through the signed /storage route so browsers never need the password.
@@ -722,6 +736,11 @@ class StorageToStorageService {
         }
         logger.success('storage.to service ready.');
         this.error = '';
+    }
+
+    /** 供模型层判断：当前是否有可用的本地磁盘后端（评测路径必须走它）。 */
+    get legacyBackend(): LocalStorageService | null {
+        return this.legacy;
     }
 
     /** 需要走本地兜底的 target 返回本地后端，否则 null（URL / 本进程刚上传的 / 无兜底）。 */
