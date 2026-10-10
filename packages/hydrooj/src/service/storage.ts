@@ -100,6 +100,7 @@ const FileSetting = Schema.intersect([
             type: Schema.const('storage_to').required(),
             token: Schema.string().role('secret').description('storage.to API token'),
             secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
+            legacyPath: Schema.string().description('本地兜底目录：切换前写入磁盘的历史文件（题目评测数据/旧上传）仍从这里读，如 /data/file/hydro'),
         }),
     ] as const),
 ] as const);
@@ -695,14 +696,44 @@ class StorageToStorageService {
         connect: { rejectUnauthorized: false },
     });
     private files: Map<string, { url: string; raw_url?: string; size: number; contentType: string; etag: string; expiresAt?: string }> = new Map();
+    /**
+     * 本地兜底后端。切到 storage.to 之前写进磁盘的历史文件（题目评测数据、旧上传）
+     * 在 storage 集合里没有 link 字段，target 是本地 blob key —— 它们必须继续从
+     * 本地磁盘读/删，否则评测取测试数据、老文件下载全部 404。
+     */
+    private legacy: LocalStorageService | null = null;
 
     constructor(private config: ReturnType<typeof FileSetting>) {
     }
 
     async start() {
         this.token = this.config.token;
+        const legacyPath = (this.config as any).legacyPath;
+        if (legacyPath) {
+            this.legacy = new LocalStorageService({
+                type: 'file',
+                path: legacyPath,
+                secret: (this.config as any).secret,
+                endPointForUser: (this.config as any).endPointForUser || '/fs/',
+                endPointForJudge: (this.config as any).endPointForJudge || '/fs/',
+            } as any);
+            await this.legacy.start();
+            logger.success(`storage.to: legacy local fallback enabled at ${legacyPath}`);
+        }
         logger.success('storage.to service ready.');
         this.error = '';
+    }
+
+    /** 需要走本地兜底的 target 返回本地后端，否则 null（URL / 本进程刚上传的 / 无兜底）。 */
+    private legacyFallbackFor(target: string): LocalStorageService | null {
+        if (!this.legacy) return null;
+        if (target.startsWith('https://storage.to/')) return null;
+        try {
+            if (this.files.has(convertPath(target))) return null;
+        } catch (e) {
+            return null;
+        }
+        return this.legacy;
     }
 
     private async api(path: string, init?: RequestInit) {
@@ -778,6 +809,8 @@ class StorageToStorageService {
         if (target.startsWith('https://storage.to/')) {
             return { metaData: {}, size: 0, etag: target, expiresAt: undefined };
         }
+        const legacy = this.legacyFallbackFor(target);
+        if (legacy) return await legacy.getMeta(target) as any;
         target = convertPath(target);
         const entry = this.files.get(target);
         if (!entry) {
@@ -793,19 +826,30 @@ class StorageToStorageService {
     }
 
     async get(target: string, options?: { stream?: Readable, buffer?: boolean }): Promise<string | Readable> {
-        target = convertPath(target);
-        // If target is a storage.to URL, fetch it directly
+        // storage.to URL —— 必须在 convertPath 之前判断，否则 '//' 会被 convertPath 判为非法路径抛错
         if (target.startsWith('https://storage.to/')) {
+            const url = target;
             if (options?.buffer) {
-                const res = await undiciFetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                const res = await undiciFetch(url, { dispatcher: StorageToStorageService.dispatcher } as any);
                 return Buffer.from(await res.arrayBuffer()) as any;
             }
             if (options?.stream) {
-                const res = await undiciFetch(target, { dispatcher: StorageToStorageService.dispatcher } as any);
+                const res = await undiciFetch(url, { dispatcher: StorageToStorageService.dispatcher } as any);
                 return Readable.fromWeb(res.body as any);
             }
-            return target;
+            return url;
         }
+        const legacy = this.legacyFallbackFor(target);
+        if (legacy) {
+            if (options && typeof options === 'object') {
+                // 本地后端语义：第二个参数是保存路径；这里兼容 { stream } / { buffer } 调用方
+                const stream = await legacy.get(target) as Readable;
+                if ((options as any).buffer) return await streamToBuffer(stream) as any;
+                return stream;
+            }
+            return await legacy.get(target, options as any);
+        }
+        target = convertPath(target);
         const entry = this.files.get(target);
         if (!entry) {
             logger.warn(`storage.to file not found: ${target}`);
@@ -823,6 +867,9 @@ class StorageToStorageService {
     }
 
     async sign(target: string, options?: { filename?: string, noExpire?: boolean }): Promise<string> {
+        if (target.startsWith('https://storage.to/')) return target;
+        const legacy = this.legacyFallbackFor(target);
+        if (legacy) return await legacy.signDownloadLink(target, options?.filename, options?.noExpire);
         target = convertPath(target);
         const entry = this.files.get(target);
         if (entry) return entry.url;
@@ -831,13 +878,36 @@ class StorageToStorageService {
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.startsWith('https://storage.to/')) return target;
+        const legacy = this.legacyFallbackFor(target);
+        if (legacy) return await legacy.signDownloadLink(target, filename, noExpire, useAlternativeEndpointFor);
         target = convertPath(target);
         const entry = this.files.get(target);
         if (entry) return entry.url;
         return `https://storage.to/${target}`;
     }
 
+    async del(target: MaybeArray<string>) {
+        const targets = typeof target === 'string' ? [target] : target;
+        const remote: string[] = [];
+        const local: string[] = [];
+        for (const t of targets) {
+            if (t.startsWith('https://storage.to/') || this.files.has(t)) remote.push(t);
+            else local.push(t);
+        }
+        if (local.length && this.legacy) await this.legacy.del(local);
+        for (const t of remote) this.files.delete(t);
+        if (remote.length) logger.info(`storage.to: ${remote.length} object(s) left to expire on storage.to`);
+    }
+
     async isLinkValid(link: string) {
+        // 老文件走本地签名链接：交给本地后端校验，避免拿任意 secret 就能下载历史文件
+        if (this.legacy && !link.includes('https://storage.to/')) {
+            try {
+                return await this.legacy.isLinkValid(link);
+            } catch (e) {
+                return true;
+            }
+        }
         return true;
     }
 

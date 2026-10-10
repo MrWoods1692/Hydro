@@ -15,7 +15,7 @@ function loadDbConfig() {
 
 async function withSystemConfig(fn) {
     const dbConfig = loadDbConfig();
-    const client = new MongoClient(dbConfig.url, { serverSelectionTimeoutMS: 5000 });
+    const client = new MongoClient(dbConfig.uri || dbConfig.url, { serverSelectionTimeoutMS: 5000 });
     await client.connect();
     try {
         const coll = client.db().collection('system');
